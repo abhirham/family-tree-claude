@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { addFamilyMember } from '@/lib/firestore';
+import { useState, useEffect } from 'react';
+import { addFamilyMember, getAllFamilyMembers } from '@/lib/firestore';
 
 export default function AddFamilyMemberForm({ onMemberAdded }) {
   const [formData, setFormData] = useState({
@@ -12,10 +12,26 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
     parentIds: [],
     spouseId: '',
     notes: '',
-    imageUrl: ''
+    imageUrl: '',
+    linkedMemberId: '',
+    relationshipType: ''
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [existingMembers, setExistingMembers] = useState([]);
+
+  useEffect(() => {
+    const fetchExistingMembers = async () => {
+      try {
+        const members = await getAllFamilyMembers();
+        setExistingMembers(members);
+      } catch (err) {
+        console.error('Error fetching existing members:', err);
+      }
+    };
+
+    fetchExistingMembers();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -28,6 +44,8 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
         birthDate: formData.birthDate ? new Date(formData.birthDate) : null,
         deathDate: formData.deathDate ? new Date(formData.deathDate) : null,
         parentIds: formData.parentIds.filter(id => id.trim()),
+        linkedMemberId: formData.linkedMemberId.trim() || null,
+        relationshipType: formData.relationshipType.trim() || null,
       };
 
       const id = await addFamilyMember(memberData);
@@ -41,7 +59,9 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
         parentIds: [],
         spouseId: '',
         notes: '',
-        imageUrl: ''
+        imageUrl: '',
+        linkedMemberId: '',
+        relationshipType: ''
       });
 
       if (onMemberAdded) {
@@ -163,6 +183,52 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
           rows={3}
           className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
         />
+      </div>
+
+      <div>
+        <label htmlFor="linkedMemberId" className="block text-sm font-medium text-gray-700">
+          Link to Existing Family Member (optional)
+        </label>
+        <select
+          id="linkedMemberId"
+          name="linkedMemberId"
+          value={formData.linkedMemberId}
+          onChange={handleChange}
+          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+        >
+          <option value="">Select a family member</option>
+          {existingMembers.map((member) => (
+            <option key={member.id} value={member.id}>
+              {member.name}
+            </option>
+          ))}
+        </select>
+        <p className="text-xs text-gray-500 mt-1">
+          Select an existing family member to establish a relationship (optional)
+        </p>
+      </div>
+
+      <div>
+        <label htmlFor="relationshipType" className="block text-sm font-medium text-gray-700">
+          Relationship Type (optional)
+        </label>
+        <select
+          id="relationshipType"
+          name="relationshipType"
+          value={formData.relationshipType}
+          onChange={handleChange}
+          disabled={!formData.linkedMemberId}
+          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <option value="">Select relationship type</option>
+          <option value="spouse">Spouse</option>
+          <option value="parent">Parent</option>
+          <option value="child">Child</option>
+          <option value="sibling">Sibling</option>
+        </select>
+        <p className="text-xs text-gray-500 mt-1">
+          Define how this person relates to the selected family member
+        </p>
       </div>
 
       <button

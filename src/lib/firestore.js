@@ -13,6 +13,7 @@ import {
 import { db } from './firebase';
 
 const COLLECTION_NAME = 'familyMembers';
+const USERS_COLLECTION_NAME = 'users';
 
 // Add a new family member
 export async function addFamilyMember(memberData) {
