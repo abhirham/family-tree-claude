@@ -8,9 +8,15 @@ export default function Home() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [refreshTree, setRefreshTree] = useState(0);
 
-  const handleMemberAdded = () => {
-    setRefreshTree(prev => prev + 1);
+  const handleMemberAdded = (memberData) => {
+    console.log('🔍 Debug: handleMemberAdded called with:', memberData);
+    console.log('🔍 Debug: Refreshing tree, current refreshTree:', refreshTree);
+    setRefreshTree(prev => {
+      console.log('🔍 Debug: Setting refreshTree from', prev, 'to', prev + 1);
+      return prev + 1;
+    });
     setShowAddForm(false);
+    console.log('🔍 Debug: Form closed, tree should refresh');
   };
 
   return (

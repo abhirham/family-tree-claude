@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { addFamilyMember, getAllFamilyMembers } from '@/lib/firestore';
+import { addFamilyMemberWithRelationships, getAllFamilyMembers, testRelationshipFlow } from '@/lib/firestore';
 
 export default function AddFamilyMemberForm({ onMemberAdded }) {
   const [formData, setFormData] = useState({
@@ -9,7 +9,6 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
     birthDate: '',
     deathDate: '',
     gender: '',
-    parentIds: [],
     spouseId: '',
     notes: '',
     imageUrl: '',
@@ -19,12 +18,14 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [existingMembers, setExistingMembers] = useState([]);
+  const [isFirstUser, setIsFirstUser] = useState(false);
 
   useEffect(() => {
     const fetchExistingMembers = async () => {
       try {
         const members = await getAllFamilyMembers();
         setExistingMembers(members);
+        setIsFirstUser(members.length === 0);
       } catch (err) {
         console.error('Error fetching existing members:', err);
       }
@@ -38,17 +39,39 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
     setIsLoading(true);
     setError(null);
 
+    // Validate relationships for non-first users
+    if (!isFirstUser && (!formData.linkedMemberId || !formData.relationshipType)) {
+      setError('Link to Existing Family Member and Relationship Type are required for all users except the first one.');
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const memberData = {
         ...formData,
         birthDate: formData.birthDate ? new Date(formData.birthDate) : null,
         deathDate: formData.deathDate ? new Date(formData.deathDate) : null,
-        parentIds: formData.parentIds.filter(id => id.trim()),
         linkedMemberId: formData.linkedMemberId.trim() || null,
         relationshipType: formData.relationshipType.trim() || null,
       };
 
-      const id = await addFamilyMember(memberData);
+      console.log('🔍 Debug: Submitting member data:', memberData);
+      console.log('🔍 Debug: Is first user:', isFirstUser);
+      
+      const id = await addFamilyMemberWithRelationships(memberData);
+      
+      console.log('🔍 Debug: Member added with ID:', id);
+      
+      // Test the relationship flow if there's a parent relationship
+      if (memberData.linkedMemberId && memberData.relationshipType === 'parent') {
+        const linkedMember = existingMembers.find(m => m.id === memberData.linkedMemberId);
+        if (linkedMember) {
+          console.log('🧪 Testing parent-child relationship...');
+          setTimeout(async () => {
+            await testRelationshipFlow(linkedMember.name, memberData.name);
+          }, 1000); // Wait a second for the database to update
+        }
+      }
       
       // Reset form
       setFormData({
@@ -56,7 +79,6 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
         birthDate: '',
         deathDate: '',
         gender: '',
-        parentIds: [],
         spouseId: '',
         notes: '',
         imageUrl: '',
@@ -64,8 +86,11 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
         relationshipType: ''
       });
 
+      console.log('🔍 Debug: Calling onMemberAdded callback');
       if (onMemberAdded) {
         onMemberAdded({ id, ...memberData });
+      } else {
+        console.log('❌ Debug: onMemberAdded callback not provided');
       }
     } catch (err) {
       setError('Failed to add family member: ' + err.message);
@@ -187,13 +212,15 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
 
       <div>
         <label htmlFor="linkedMemberId" className="block text-sm font-medium text-gray-700">
-          Link to Existing Family Member (optional)
+          Link to Existing Family Member {!isFirstUser && <span className="text-red-500">*</span>}
+          {isFirstUser && <span className="text-gray-500">(optional for first user)</span>}
         </label>
         <select
           id="linkedMemberId"
           name="linkedMemberId"
           value={formData.linkedMemberId}
           onChange={handleChange}
+          required={!isFirstUser}
           className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
         >
           <option value="">Select a family member</option>
@@ -210,7 +237,8 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
 
       <div>
         <label htmlFor="relationshipType" className="block text-sm font-medium text-gray-700">
-          Relationship Type (optional)
+          Relationship Type {!isFirstUser && <span className="text-red-500">*</span>}
+          {isFirstUser && <span className="text-gray-500">(optional for first user)</span>}
         </label>
         <select
           id="relationshipType"
@@ -218,6 +246,7 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
           value={formData.relationshipType}
           onChange={handleChange}
           disabled={!formData.linkedMemberId}
+          required={!isFirstUser}
           className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <option value="">Select relationship type</option>
@@ -229,6 +258,11 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
         <p className="text-xs text-gray-500 mt-1">
           Define how this person relates to the selected family member
         </p>
+        {formData.relationshipType === 'spouse' && (
+          <p className="text-xs text-orange-600 mt-1 font-medium">
+            Note: When adding a spouse, you can only add their parents as new family members
+          </p>
+        )}
       </div>
 
       <button
