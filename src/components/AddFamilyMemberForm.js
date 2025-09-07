@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { addFamilyMemberWithRelationships, getAllFamilyMembers, testRelationshipFlow } from '@/lib/firestore';
+import AutoComplete from './AutoComplete';
 
 export default function AddFamilyMemberForm({ onMemberAdded }) {
   const [formData, setFormData] = useState({
@@ -283,18 +284,19 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
               <span>⚥</span>
               <span>Gender</span>
             </label>
-            <select
-              id="gender"
-              name="gender"
+            <AutoComplete
+              options={[
+                { value: 'male', label: 'Male' },
+                { value: 'female', label: 'Female' },
+                { value: 'other', label: 'Other' }
+              ]}
               value={formData.gender}
-              onChange={handleChange}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white"
-            >
-              <option value="">Select gender</option>
-              <option value="male">Male</option>
-              <option value="female">Female</option>
-              <option value="other">Other</option>
-            </select>
+              onSelect={(value) => handleChange({ target: { name: 'gender', value } })}
+              placeholder="Select or type gender"
+              displayKey="label"
+              valueKey="value"
+              icon={<span>⚥</span>}
+            />
           </div>
 
           <div className="space-y-2">
@@ -379,21 +381,27 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
                     <span>👥</span>
                     <span>Link to Existing Family Member *</span>
                   </label>
-                  <select
-                    id="linkedMemberId"
-                    name="linkedMemberId"
+                  <AutoComplete
+                    options={existingMembers}
                     value={formData.linkedMemberId}
-                    onChange={handleChange}
+                    onSelect={(value) => handleChange({ target: { name: 'linkedMemberId', value } })}
+                    placeholder="Type to search family members..."
+                    displayKey="name"
+                    valueKey="id"
                     required={!isFirstUser}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white"
-                  >
-                    <option value="">Select a family member</option>
-                    {existingMembers.map((member) => (
-                      <option key={member.id} value={member.id}>
-                        {member.name}
-                      </option>
-                    ))}
-                  </select>
+                    icon={<span>👥</span>}
+                    renderOption={(member, isHighlighted) => (
+                      <div className={`flex items-center gap-2 ${isHighlighted ? 'text-blue-700' : 'text-gray-900'}`}>
+                        <span className="text-sm">{member.root ? '👑' : '👤'}</span>
+                        <span>{member.name}</span>
+                        {member.gender && (
+                          <span className="text-xs text-gray-500 ml-auto">
+                            {member.gender === 'male' ? '♂️' : member.gender === 'female' ? '♀️' : '⚥'}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  />
                 </div>
 
                 <div className="space-y-2">
@@ -401,38 +409,65 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
                     <span>❤️</span>
                     <span>Relationship Type *</span>
                   </label>
-                  <select
-                    id="relationshipType"
-                    name="relationshipType"
+                  <AutoComplete
+                    options={(() => {
+                      const baseOptions = [
+                        { value: 'spouse', label: '💑 Spouse', enabled: true },
+                        { value: 'parent', label: '👨‍👩‍👧‍👦 Parent', enabled: true }
+                      ];
+                      
+                      if (formData.linkedMemberId) {
+                        const selectedMember = existingMembers.find(m => m.id === formData.linkedMemberId);
+                        const hasSpouse = selectedMember?.spouseId;
+                        const isRootUser = selectedMember && selectedMember.root === true;
+                        
+                        baseOptions.push({
+                          value: 'child',
+                          label: hasSpouse ? '👶 Child' : '👶 Child (requires spouse first)',
+                          enabled: hasSpouse
+                        });
+                        
+                        baseOptions.push({
+                          value: 'sibling',
+                          label: isRootUser ? '👫 Sibling' : '👫 Sibling (only available for root users)',
+                          enabled: isRootUser
+                        });
+                      }
+                      
+                      return baseOptions;
+                    })()}
                     value={formData.relationshipType}
-                    onChange={handleChange}
+                    onSelect={(value, option) => {
+                      if (option.enabled) {
+                        handleChange({ target: { name: 'relationshipType', value } });
+                      }
+                    }}
+                    placeholder="Select relationship type..."
+                    displayKey="label"
+                    valueKey="value"
                     disabled={!formData.linkedMemberId}
                     required={!isFirstUser}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <option value="">Select relationship type</option>
-                    <option value="spouse">💑 Spouse</option>
-                    <option value="parent">👨‍👩‍👧‍👦 Parent</option>
-                    {formData.linkedMemberId && (() => {
-                      const selectedMember = existingMembers.find(m => m.id === formData.linkedMemberId);
-                      const hasSpouse = selectedMember?.spouseId;
-                      return hasSpouse ? (
-                        <option value="child">👶 Child</option>
-                      ) : (
-                        <option value="child" disabled>👶 Child (requires spouse first)</option>
+                    icon={<span>❤️</span>}
+                    renderOption={(option, isHighlighted) => (
+                      <div className={`flex items-center justify-between ${
+                        !option.enabled 
+                          ? 'text-gray-400 cursor-not-allowed' 
+                          : isHighlighted 
+                          ? 'text-blue-700' 
+                          : 'text-gray-900'
+                      }`}>
+                        <span>{option.label}</span>
+                        {!option.enabled && (
+                          <span className="text-xs text-gray-400">🚫</span>
+                        )}
+                      </div>
+                    )}
+                    filterFunction={(options, input) => {
+                      return options.filter(option =>
+                        option.label.toLowerCase().includes(input.toLowerCase())
                       );
-                    })()}
-                    {formData.linkedMemberId && (() => {
-                      const selectedMember = existingMembers.find(m => m.id === formData.linkedMemberId);
-                      const isRootUser = selectedMember && selectedMember.root === true;
-                      
-                      return isRootUser ? (
-                        <option value="sibling">👫 Sibling</option>
-                      ) : (
-                        <option value="sibling" disabled>👫 Sibling (only available for root users)</option>
-                      );
-                    })()}
-                  </select>
+                    }}
+                  />
                   
                   {formData.relationshipType === 'spouse' && (
                     <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 mt-2">

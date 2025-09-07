@@ -1,16 +1,33 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import FamilyTree from '@/components/FamilyTree';
 import AddFamilyMemberForm from '@/components/AddFamilyMemberForm';
 import Modal from '@/components/Modal';
+import AutoComplete from '@/components/AutoComplete';
+import { getAllFamilyMembers } from '@/lib/firestore';
 
 export default function Home() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [refreshTree, setRefreshTree] = useState(0);
   const [searchA, setSearchA] = useState('');
   const [searchB, setSearchB] = useState('');
+  const [familyMembers, setFamilyMembers] = useState([]);
   const familyTreeRef = useRef(null);
+
+  // Fetch family members for search autocomplete
+  useEffect(() => {
+    const fetchMembers = async () => {
+      try {
+        const members = await getAllFamilyMembers();
+        setFamilyMembers(members);
+      } catch (error) {
+        console.error('Error fetching family members for search:', error);
+      }
+    };
+    
+    fetchMembers();
+  }, [refreshTree]); // Refresh when tree updates
 
   const handleMemberAdded = (memberData) => {
     console.log('🔍 Debug: handleMemberAdded called with:', memberData);
@@ -23,15 +40,23 @@ export default function Home() {
     console.log('🔍 Debug: Form closed, tree should refresh');
   };
 
-  const handleSearchA = () => {
+  const handleSearchA = (searchValue = searchA) => {
     if (familyTreeRef.current && familyTreeRef.current.handleSearchA) {
-      familyTreeRef.current.handleSearchA(searchA);
+      // If searchValue is an ID (from autocomplete), find the member name
+      const member = familyMembers.find(m => m.id === searchValue);
+      const searchTerm = member ? member.name : searchValue;
+      familyTreeRef.current.handleSearchA(searchTerm);
     }
   };
 
-  const handleSearchPath = () => {
+  const handleSearchPath = (searchValueA = searchA, searchValueB = searchB) => {
     if (familyTreeRef.current && familyTreeRef.current.handleSearchPath) {
-      familyTreeRef.current.handleSearchPath(searchA, searchB);
+      // Convert IDs to names if needed
+      const memberA = familyMembers.find(m => m.id === searchValueA);
+      const memberB = familyMembers.find(m => m.id === searchValueB);
+      const searchTermA = memberA ? memberA.name : searchValueA;
+      const searchTermB = memberB ? memberB.name : searchValueB;
+      familyTreeRef.current.handleSearchPath(searchTermA, searchTermB);
     }
   };
 
@@ -55,16 +80,35 @@ export default function Home() {
                   Search Person (A)
                 </label>
                 <div className="flex space-x-2">
-                  <input
-                    type="text"
-                    value={searchA}
-                    onChange={(e) => setSearchA(e.target.value)}
-                    placeholder="Enter name to search"
-                    className="flex-1 px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 focus:bg-white transition-all"
-                    onKeyPress={(e) => e.key === 'Enter' && handleSearchA()}
-                  />
+                  <div className="flex-1">
+                    <AutoComplete
+                      options={familyMembers}
+                      value={searchA}
+                      onChange={setSearchA}
+                      onSelect={(value, member) => {
+                        setSearchA(value);
+                        handleSearchA(value);
+                      }}
+                      placeholder="Type to search family members..."
+                      displayKey="name"
+                      valueKey="id"
+                      icon={<span>🔍</span>}
+                      className="py-2"
+                      renderOption={(member, isHighlighted) => (
+                        <div className={`flex items-center gap-2 ${isHighlighted ? 'text-blue-700' : 'text-gray-900'}`}>
+                          <span className="text-sm">{member.root ? '👑' : '👤'}</span>
+                          <span>{member.name}</span>
+                          {member.birthDate && (
+                            <span className="text-xs text-gray-500 ml-auto">
+                              {new Date(member.birthDate.seconds * 1000).getFullYear()}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    />
+                  </div>
                   <button
-                    onClick={handleSearchA}
+                    onClick={() => handleSearchA()}
                     className="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium"
                   >
                     Find
@@ -77,16 +121,35 @@ export default function Home() {
                   Find Path to Person (B)
                 </label>
                 <div className="flex space-x-2">
-                  <input
-                    type="text"
-                    value={searchB}
-                    onChange={(e) => setSearchB(e.target.value)}
-                    placeholder="Enter name to find path"
-                    className="flex-1 px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 bg-gray-50 focus:bg-white transition-all"
-                    onKeyPress={(e) => e.key === 'Enter' && handleSearchPath()}
-                  />
+                  <div className="flex-1">
+                    <AutoComplete
+                      options={familyMembers}
+                      value={searchB}
+                      onChange={setSearchB}
+                      onSelect={(value, member) => {
+                        setSearchB(value);
+                        handleSearchPath(searchA, value);
+                      }}
+                      placeholder="Type to search destination person..."
+                      displayKey="name"
+                      valueKey="id"
+                      icon={<span>🎯</span>}
+                      className="py-2"
+                      renderOption={(member, isHighlighted) => (
+                        <div className={`flex items-center gap-2 ${isHighlighted ? 'text-green-700' : 'text-gray-900'}`}>
+                          <span className="text-sm">{member.root ? '👑' : '👤'}</span>
+                          <span>{member.name}</span>
+                          {member.birthDate && (
+                            <span className="text-xs text-gray-500 ml-auto">
+                              {new Date(member.birthDate.seconds * 1000).getFullYear()}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    />
+                  </div>
                   <button
-                    onClick={handleSearchPath}
+                    onClick={() => handleSearchPath()}
                     className="px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors font-medium"
                   >
                     Path
