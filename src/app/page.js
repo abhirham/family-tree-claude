@@ -87,13 +87,18 @@ export default function Home() {
                       onChange={setSearchA}
                       onSelect={(value, member) => {
                         setSearchA(value);
-                        handleSearchA(value);
+                        // Don't automatically trigger search - wait for button click
                       }}
                       placeholder="Type to search family members..."
                       displayKey="name"
                       valueKey="id"
                       icon={<span>🔍</span>}
                       className="py-2"
+                      clearable={true}
+                      onClear={() => {
+                        setSearchA('');
+                        // Don't automatically reset search - wait for button action
+                      }}
                       renderOption={(member, isHighlighted) => (
                         <div className={`flex items-center gap-2 ${isHighlighted ? 'text-blue-700' : 'text-gray-900'}`}>
                           <span className="text-sm">{member.root ? '👑' : '👤'}</span>
@@ -128,13 +133,17 @@ export default function Home() {
                       onChange={setSearchB}
                       onSelect={(value, member) => {
                         setSearchB(value);
-                        handleSearchPath(searchA, value);
+                        // Don't automatically trigger path search - wait for button click
                       }}
                       placeholder="Type to search destination person..."
                       displayKey="name"
                       valueKey="id"
                       icon={<span>🎯</span>}
                       className="py-2"
+                      clearable={true}
+                      onClear={() => {
+                        setSearchB('');
+                      }}
                       renderOption={(member, isHighlighted) => (
                         <div className={`flex items-center gap-2 ${isHighlighted ? 'text-green-700' : 'text-gray-900'}`}>
                           <span className="text-sm">{member.root ? '👑' : '👤'}</span>

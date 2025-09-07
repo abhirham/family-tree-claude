@@ -15,7 +15,9 @@ export default function AutoComplete({
   required = false,
   renderOption = null, // Custom renderer for options
   filterFunction = null, // Custom filter function
-  icon = null
+  icon = null,
+  clearable = false, // Enable clear button
+  onClear = null // Callback when cleared
 }) {
   const [inputValue, setInputValue] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
@@ -147,6 +149,25 @@ export default function AutoComplete({
     }, 150);
   };
 
+  // Handle clear
+  const handleClear = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setInputValue('');
+    setShowDropdown(false);
+    setHighlightedIndex(-1);
+    
+    if (onChange) {
+      onChange('');
+    }
+    if (onClear) {
+      onClear();
+    }
+    
+    // Focus back to input
+    inputRef.current?.focus();
+  };
+
   return (
     <div className="relative">
       <div className="relative">
@@ -166,16 +187,31 @@ export default function AutoComplete({
           placeholder={placeholder}
           disabled={disabled}
           required={required}
-          className={`w-full px-4 py-3 ${icon ? 'pl-10' : ''} border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
+          className={`w-full px-4 py-3 ${icon ? 'pl-10' : ''} ${clearable && inputValue ? 'pr-16' : 'pr-10'} border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
           autoComplete="off"
         />
-        {showDropdown && (
-          <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </div>
-        )}
+        {/* Right side icons */}
+        <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
+          {clearable && inputValue && !disabled && (
+            <button
+              type="button"
+              onClick={handleClear}
+              className="p-1 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 transition-colors"
+              tabIndex={-1}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          )}
+          {showDropdown && (
+            <div className="text-gray-400">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+          )}
+        </div>
       </div>
 
       {showDropdown && filteredOptions.length > 0 && (
