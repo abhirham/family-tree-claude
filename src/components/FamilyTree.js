@@ -1,107 +1,61 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { getAllFamilyMembers } from '@/lib/firestore';
-import Image from 'next/image';
-
-function FamilyMemberCard({ member, onClick, isSelected = false }) {
-  const formatDate = (dateObj) => {
-    if (!dateObj) return '';
-    const date = dateObj.seconds ? new Date(dateObj.seconds * 1000) : new Date(dateObj);
-    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-  };
-  
-  return (
-    <div 
-      className={`bg-white border-2 rounded-lg p-4 shadow-md hover:shadow-lg transition-all cursor-pointer min-w-[200px] ${
-        isSelected ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-gray-400'
-      }`}
-      onClick={() => onClick(member)}
-    >
-      <div className="flex flex-col items-center mb-3">
-        {member.imageUrl ? (
-          <Image
-            src={member.imageUrl}
-            alt={member.name}
-            width={80}
-            height={80}
-            className="rounded-full object-cover border-2 border-gray-200"
-          />
-        ) : (
-          <div className="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center border-2 border-gray-300">
-            <span className="text-gray-500 text-xs">No Photo</span>
-          </div>
-        )}
-      </div>
-      
-      <h3 className="font-bold text-lg text-gray-800 text-center">{member.name}</h3>
-      <p className="text-xs text-gray-400 text-center mt-1 font-mono">ID: {member.id}</p>
-      {member.parentId && (
-        <p className="text-xs text-orange-400 text-center font-mono">ParentID: {member.parentId}</p>
-      )}
-      {member.childIds && member.childIds.length > 0 && (
-        <p className="text-xs text-green-400 text-center font-mono">Children: {member.childIds.length}</p>
-      )}
-      <div className="text-sm text-gray-600 mt-2 text-center">
-        {member.birthDate && (
-          <p>Born: {formatDate(member.birthDate)}</p>
-        )}
-        {member.deathDate && (
-          <p>Died: {formatDate(member.deathDate)}</p>
-        )}
-        {member.gender && (
-          <p className="capitalize mt-1">{member.gender}</p>
-        )}
-      </div>
-      
-      {member.notes && (
-        <p className="text-xs text-gray-500 mt-2 italic text-center">{member.notes}</p>
-      )}
-    </div>
-  );
-}
+import PersonCard from './PersonCard';
+import RelationshipSection from './RelationshipSection';
 
 function NavigationStack({ stack, onNavigateToMember, onClearStack }) {
   return (
-    <div className="w-64 bg-gray-50 border-r border-gray-200 p-4">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="font-semibold text-gray-800">Navigation</h3>
+    <div className="w-72 bg-white border-r border-gray-200 p-6 h-full overflow-y-auto">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-2">
+          <span className="text-2xl">🌳</span>
+          <h3 className="font-semibold text-gray-800">Family Tree</h3>
+        </div>
         {stack.length > 0 && (
           <button
             onClick={onClearStack}
-            className="text-sm text-red-600 hover:text-red-800"
+            className="text-sm text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 px-3 py-1 rounded-full transition-colors"
           >
-            Clear
+            Reset
           </button>
         )}
       </div>
       
       {stack.length === 0 ? (
-        <p className="text-sm text-gray-500">Click on family members to navigate</p>
+        <div className="text-center py-8">
+          <div className="text-4xl mb-4">👥</div>
+          <p className="text-sm text-gray-500 leading-relaxed">
+            Click on family members to explore connections and build your navigation history
+          </p>
+        </div>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-3">
+          <h4 className="text-sm font-medium text-gray-700 uppercase tracking-wide">Navigation History</h4>
           {stack.map((member, index) => (
             <div
               key={`${member.id}-${index}`}
-              className="flex items-center space-x-2 p-2 bg-white rounded border cursor-pointer hover:bg-gray-50"
+              className={`flex items-center space-x-3 p-3 rounded-lg cursor-pointer transition-all ${
+                index === stack.length - 1 
+                  ? 'bg-blue-50 border border-blue-200' 
+                  : 'bg-gray-50 hover:bg-gray-100 border border-transparent'
+              }`}
               onClick={() => onNavigateToMember(member, index)}
             >
-              <div className="w-8 h-8 rounded-full bg-gray-200 flex-shrink-0">
+              <div className="w-10 h-10 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden">
                 {member.imageUrl ? (
-                  <Image
-                    src={member.imageUrl}
-                    alt={member.name}
-                    width={32}
-                    height={32}
-                    className="rounded-full object-cover"
-                  />
+                  <PersonCard member={member} onClick={() => {}} />
                 ) : (
-                  <div className="w-full h-full rounded-full bg-gray-300"></div>
+                  <div className="w-full h-full bg-gradient-to-br from-blue-400 to-purple-500"></div>
                 )}
               </div>
-              <span className="text-sm font-medium text-gray-800 truncate">{member.name}</span>
+              <div className="flex-1 min-w-0">
+                <span className="text-sm font-medium text-gray-800 truncate block">{member.name}</span>
+                <span className="text-xs text-gray-500">Step {index + 1}</span>
+              </div>
               {index === stack.length - 1 && (
-                <span className="text-xs text-blue-600">Current</span>
+                <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded-full">Current</span>
               )}
             </div>
           ))}
@@ -111,7 +65,7 @@ function NavigationStack({ stack, onNavigateToMember, onClearStack }) {
   );
 }
 
-export default function FamilyTree() {
+const FamilyTree = forwardRef((props, ref) => {
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -120,6 +74,48 @@ export default function FamilyTree() {
   const [displayedMembers, setDisplayedMembers] = useState([]);
   const [searchA, setSearchA] = useState('');
   const [searchB, setSearchB] = useState('');
+
+  useImperativeHandle(ref, () => ({
+    handleSearchA: (searchTerm) => {
+      if (!searchTerm.trim()) return;
+      
+      const foundMember = members.find(member => 
+        member.name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      
+      if (foundMember) {
+        setNavigationStack([]);
+        handleMemberClick(foundMember);
+      } else {
+        alert('Person not found');
+      }
+    },
+    handleSearchPath: (searchTermA, searchTermB) => {
+      if (!searchTermA.trim() || !searchTermB.trim()) return;
+      
+      const memberA = members.find(member => 
+        member.name.toLowerCase().includes(searchTermA.toLowerCase())
+      );
+      const memberB = members.find(member => 
+        member.name.toLowerCase().includes(searchTermB.toLowerCase())
+      );
+      
+      if (!memberA || !memberB) {
+        alert('One or both persons not found');
+        return;
+      }
+      
+      const path = findPath(memberA.id, memberB.id);
+      if (path) {
+        const pathMembers = path.map(id => members.find(m => m.id === id)).filter(Boolean);
+        setNavigationStack(pathMembers);
+        setCurrentPerson(memberB);
+        setDisplayedMembers([memberB]);
+      } else {
+        alert('No path found between the two people');
+      }
+    }
+  }));
 
   useEffect(() => {
     const fetchMembers = async () => {
@@ -230,6 +226,38 @@ export default function FamilyTree() {
     return relatedWithTypes;
   };
 
+  const groupRelatedMembers = (relatedMembers) => {
+    const groups = {
+      spouses: [],
+      children: [],
+      parents: [],
+      siblings: [],
+      stepChildren: []
+    };
+
+    relatedMembers.forEach(item => {
+      switch (item.type) {
+        case 'Spouse':
+          groups.spouses.push(item);
+          break;
+        case 'Child':
+          groups.children.push(item);
+          break;
+        case 'Step-Child':
+          groups.stepChildren.push(item);
+          break;
+        case 'Parent':
+          groups.parents.push(item);
+          break;
+        case 'Sibling':
+          groups.siblings.push(item);
+          break;
+      }
+    });
+
+    return groups;
+  };
+
   const getReverseRelationship = (relationshipType) => {
     const reverseMap = {
       'parent': 'Child',
@@ -267,20 +295,6 @@ export default function FamilyTree() {
     setDisplayedMembers(rootMembers);
   };
 
-  const handleSearchA = () => {
-    if (!searchA.trim()) return;
-    
-    const foundMember = members.find(member => 
-      member.name.toLowerCase().includes(searchA.toLowerCase())
-    );
-    
-    if (foundMember) {
-      setNavigationStack([]);
-      handleMemberClick(foundMember);
-    } else {
-      alert('Person not found');
-    }
-  };
 
   const findPath = (startId, endId, visited = new Set()) => {
     if (startId === endId) return [startId];
@@ -302,31 +316,6 @@ export default function FamilyTree() {
     return null;
   };
 
-  const handleSearchPath = () => {
-    if (!searchA.trim() || !searchB.trim()) return;
-    
-    const memberA = members.find(member => 
-      member.name.toLowerCase().includes(searchA.toLowerCase())
-    );
-    const memberB = members.find(member => 
-      member.name.toLowerCase().includes(searchB.toLowerCase())
-    );
-    
-    if (!memberA || !memberB) {
-      alert('One or both persons not found');
-      return;
-    }
-    
-    const path = findPath(memberA.id, memberB.id);
-    if (path) {
-      const pathMembers = path.map(id => members.find(m => m.id === id)).filter(Boolean);
-      setNavigationStack(pathMembers);
-      setCurrentPerson(memberB);
-      setDisplayedMembers([memberB]);
-    } else {
-      alert('No path found between the two people');
-    }
-  };
 
   if (loading) {
     return (
@@ -355,85 +344,99 @@ export default function FamilyTree() {
       
       {/* Main Content */}
       <div className="flex-1 p-6 overflow-auto">
-        {/* Search Controls */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Search Person (A)
-              </label>
-              <div className="flex space-x-2">
-                <input
-                  type="text"
-                  value={searchA}
-                  onChange={(e) => setSearchA(e.target.value)}
-                  placeholder="Enter name to search"
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  onKeyPress={(e) => e.key === 'Enter' && handleSearchA()}
-                />
-                <button
-                  onClick={handleSearchA}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                >
-                  Find
-                </button>
-              </div>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Find Path to Person (B)
-              </label>
-              <div className="flex space-x-2">
-                <input
-                  type="text"
-                  value={searchB}
-                  onChange={(e) => setSearchB(e.target.value)}
-                  placeholder="Enter name to find path"
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  onKeyPress={(e) => e.key === 'Enter' && handleSearchPath()}
-                />
-                <button
-                  onClick={handleSearchPath}
-                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
-                >
-                  Path
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
 
         {/* Family Tree Display */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="max-w-6xl mx-auto">
           {displayedMembers.length === 0 ? (
-            <div className="text-center py-12">
-              <h2 className="text-xl font-semibold text-gray-600 mb-4">No family members yet</h2>
-              <p className="text-gray-500">Add your first family member to get started!</p>
+            <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
+              <div className="text-6xl mb-6">🌳</div>
+              <h2 className="text-2xl font-semibold text-gray-800 mb-4">Your Family Tree Awaits</h2>
+              <p className="text-gray-600 text-lg mb-6">Start building your family history by adding your first family member</p>
+              <div className="inline-flex items-center gap-2 text-sm text-gray-500">
+                <span>✨</span>
+                <span>Click "Add Family Member" above to begin</span>
+              </div>
+            </div>
+          ) : currentPerson ? (
+            <div>
+              {/* Hero Section for Selected Person */}
+              <PersonCard 
+                member={currentPerson} 
+                onClick={() => {}}
+                isHero={true}
+              />
+              
+              {/* Related Members by Relationship */}
+              {(() => {
+                const relatedMembers = getRelatedMembers(currentPerson);
+                const groups = groupRelatedMembers(relatedMembers);
+                
+                return (
+                  <div className="space-y-8">
+                    <RelationshipSection
+                      title="Spouse"
+                      members={groups.spouses}
+                      onMemberClick={handleMemberClick}
+                      currentPerson={currentPerson}
+                      icon="💑"
+                    />
+                    
+                    <RelationshipSection
+                      title="Children"
+                      members={groups.children}
+                      onMemberClick={handleMemberClick}
+                      currentPerson={currentPerson}
+                      icon="👶"
+                    />
+                    
+                    <RelationshipSection
+                      title="Step Children"
+                      members={groups.stepChildren}
+                      onMemberClick={handleMemberClick}
+                      currentPerson={currentPerson}
+                      icon="👦"
+                    />
+                    
+                    <RelationshipSection
+                      title="Parents"
+                      members={groups.parents}
+                      onMemberClick={handleMemberClick}
+                      currentPerson={currentPerson}
+                      icon="👨‍👩‍👧‍👦"
+                    />
+                    
+                    <RelationshipSection
+                      title="Siblings"
+                      members={groups.siblings}
+                      onMemberClick={handleMemberClick}
+                      currentPerson={currentPerson}
+                      icon="👫"
+                    />
+                  </div>
+                );
+              })()}
             </div>
           ) : (
             <div>
-              <h2 className="text-2xl font-bold text-center mb-2">Family Tree</h2>
-              
-              {currentPerson ? (
-                <p className="text-center text-gray-600 mb-6">
-                  Showing connections for <strong>{currentPerson.name}</strong>
-                </p>
-              ) : (
-                <p className="text-center text-gray-600 mb-6">
-                  Root family members (click to explore connections)
-                </p>
-              )}
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {displayedMembers.map((member) => (
-                  <FamilyMemberCard 
-                    key={member.id} 
-                    member={member} 
-                    onClick={handleMemberClick}
-                    isSelected={currentPerson?.id === member.id}
-                  />
-                ))}
+              {/* Root Members Display */}
+              <div className="bg-white rounded-2xl shadow-lg p-8 mb-8">
+                <div className="text-center mb-8">
+                  <h2 className="text-3xl font-bold text-gray-800 mb-2">Family Tree</h2>
+                  <p className="text-gray-600">
+                    Root family members - click on anyone to explore their connections
+                  </p>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {displayedMembers.map((member) => (
+                    <PersonCard
+                      key={member.id} 
+                      member={member} 
+                      onClick={handleMemberClick}
+                      isSelected={false}
+                    />
+                  ))}
+                </div>
               </div>
             </div>
           )}
@@ -441,4 +444,7 @@ export default function FamilyTree() {
       </div>
     </div>
   );
-}
+});
+
+FamilyTree.displayName = 'FamilyTree';
+export default FamilyTree;
