@@ -127,14 +127,8 @@ export default function FamilyTree() {
         const familyMembers = await getAllFamilyMembers();
         setMembers(familyMembers);
         
-        // Show root members initially (members with no real parents)
-        const rootMembers = familyMembers.filter(member => {
-          // A member is root if they're not in anyone's childIds (regardless of parentId)
-          const isInSomeoneChildIds = familyMembers.some(otherMember => 
-            otherMember.childIds && otherMember.childIds.includes(member.id)
-          );
-          return !isInSomeoneChildIds;
-        });
+        // Show root members initially (members with root=true)
+        const rootMembers = familyMembers.filter(member => member.root === true);
         
         console.log('🔍 Debug: All family members:', familyMembers);
         console.log('🔍 Debug: Root members:', rootMembers);
@@ -197,6 +191,39 @@ export default function FamilyTree() {
       if (spouse) {
         related.add(spouse.id);
         relatedWithTypes.push({ member: spouse, type: 'Spouse' });
+        
+        // Also include spouse's children as step-children if they're not already included
+        if (spouse.childIds) {
+          spouse.childIds.forEach(childId => {
+            if (!related.has(childId) && childId !== person.id) {
+              const child = members.find(m => m.id === childId);
+              if (child) {
+                related.add(child.id);
+                relatedWithTypes.push({ member: child, type: 'Step-Child' });
+              }
+            }
+          });
+        }
+      }
+    }
+
+    // Also find if this person is someone else's spouse
+    const spouseOfMember = members.find(member => member.spouseId === person.id);
+    if (spouseOfMember && !related.has(spouseOfMember.id)) {
+      related.add(spouseOfMember.id);
+      relatedWithTypes.push({ member: spouseOfMember, type: 'Spouse' });
+      
+      // Include spouse's children as step-children if they're not already included
+      if (spouseOfMember.childIds) {
+        spouseOfMember.childIds.forEach(childId => {
+          if (!related.has(childId) && childId !== person.id) {
+            const child = members.find(m => m.id === childId);
+            if (child) {
+              related.add(child.id);
+              relatedWithTypes.push({ member: child, type: 'Step-Child' });
+            }
+          }
+        });
       }
     }
 
@@ -236,13 +263,7 @@ export default function FamilyTree() {
     setCurrentPerson(null);
     
     // Show root members again
-    const rootMembers = members.filter(member => {
-      // A member is root if they're not in anyone's childIds (regardless of parentId)
-      const isInSomeoneChildIds = members.some(otherMember => 
-        otherMember.childIds && otherMember.childIds.includes(member.id)
-      );
-      return !isInSomeoneChildIds;
-    });
+    const rootMembers = members.filter(member => member.root === true);
     setDisplayedMembers(rootMembers);
   };
 

@@ -46,6 +46,16 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
       return;
     }
 
+    // Validate child relationship requires spouse
+    if (formData.relationshipType === 'child' && formData.linkedMemberId) {
+      const selectedMember = existingMembers.find(m => m.id === formData.linkedMemberId);
+      if (!selectedMember?.spouseId) {
+        setError('Cannot add a child to a user without a spouse. Please add a spouse first.');
+        setIsLoading(false);
+        return;
+      }
+    }
+
     try {
       const memberData = {
         ...formData,
@@ -252,7 +262,15 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
           <option value="">Select relationship type</option>
           <option value="spouse">Spouse</option>
           <option value="parent">Parent</option>
-          <option value="child">Child</option>
+          {formData.linkedMemberId && (() => {
+            const selectedMember = existingMembers.find(m => m.id === formData.linkedMemberId);
+            const hasSpouse = selectedMember?.spouseId;
+            return hasSpouse ? (
+              <option value="child">Child</option>
+            ) : (
+              <option value="child" disabled>Child (requires spouse first)</option>
+            );
+          })()}
           <option value="sibling">Sibling</option>
         </select>
         <p className="text-xs text-gray-500 mt-1">
@@ -263,6 +281,18 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
             Note: When adding a spouse, you can only add their parents as new family members
           </p>
         )}
+        {formData.relationshipType === 'child' && formData.linkedMemberId && (() => {
+          const selectedMember = existingMembers.find(m => m.id === formData.linkedMemberId);
+          const hasSpouse = selectedMember?.spouseId;
+          if (!hasSpouse) {
+            return (
+              <p className="text-xs text-red-600 mt-1 font-medium">
+                Cannot add a child to a user without a spouse. Please add a spouse first.
+              </p>
+            );
+          }
+          return null;
+        })()}
       </div>
 
       <button

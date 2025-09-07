@@ -46,10 +46,11 @@ export async function addFamilyMemberWithRelationships(formData) {
       relationshipType: null
     };
 
-    // If no relationship (first user), add unique parentId
+    // If no relationship (first user), add unique parentId and set as root
     if (!linkedMemberId || !relationshipType) {
       finalMemberData.parentId = generateUniqueParentId();
-      console.log('🔍 Debug: First user detected, adding parentId:', finalMemberData.parentId);
+      finalMemberData.root = true;
+      console.log('🔍 Debug: First user detected, adding parentId and root=true:', finalMemberData.parentId);
     }
 
     console.log('🔍 Debug: Final member data to store:', finalMemberData);
@@ -81,21 +82,31 @@ export async function addFamilyMemberWithRelationships(formData) {
           console.log('🔍 Debug: Setting up new parent with childIds:', childIds);
           console.log('🔍 Debug: New parent ID:', newMemberId);
           
+          // The first parent added automatically takes over the root status
+          // Remove root from all previous root members (children who had root=true)
           await updateFamilyMember(newMemberId, {
             childIds: childIds,
-            parentId: null  // Remove parentId from new parent
+            parentId: null,  // Remove parentId from new parent
+            root: true  // First parent always gets root=true
           });
           
-          // Remove parentId from all siblings (they now have a real parent)
-          console.log('🔍 Debug: Removing parentId from siblings:', allSiblings.map(s => s.name));
+          // Remove parentId and root from all siblings (they now have a real parent)
+          // Children lose root status when parent is added
+          console.log('🔍 Debug: Removing parentId and root from siblings:', allSiblings.map(s => s.name));
           for (const sibling of allSiblings) {
             await updateFamilyMember(sibling.id, {
-              parentId: null
+              parentId: null,
+              root: false
             });
           }
           break;
           
         case 'child':
+          // Validation: Can only add a child if the user has a spouse
+          if (!linkedMember.spouseId) {
+            throw new Error('Cannot add a child to a user without a spouse. Please add a spouse first.');
+          }
+          
           // New member is child of linked member
           // Add new member ID to linked member's childIds
           const parentChildren = linkedMember.childIds || [];
@@ -103,27 +114,58 @@ export async function addFamilyMemberWithRelationships(formData) {
             updates.childIds = [...parentChildren, newMemberId];
           }
           
-          // Remove parentId from new member
+          // Also add the child to the spouse's childIds
+          const spouse = await getFamilyMember(linkedMember.spouseId);
+          const spouseChildren = spouse.childIds || [];
+          if (!spouseChildren.includes(newMemberId)) {
+            await updateFamilyMember(linkedMember.spouseId, {
+              childIds: [...spouseChildren, newMemberId]
+            });
+          }
+          
+          // Children do NOT inherit root status from parent - they get root=false
           await updateFamilyMember(newMemberId, {
-            parentId: null
+            parentId: null,
+            root: false
           });
           break;
           
         case 'spouse':
           // Bidirectional spouse relationship
           updates.spouseId = newMemberId;
-          await updateFamilyMember(newMemberId, {
-            spouseId: linkedMemberId
-          });
+          
+          // If the new spouse is male and being added to a root user, they take over root status
+          const shouldTakeOverRoot = memberData.gender === 'male' && linkedMember.root === true;
+          
+          if (shouldTakeOverRoot) {
+            // New male spouse becomes root
+            await updateFamilyMember(newMemberId, {
+              spouseId: linkedMemberId,
+              parentId: null,
+              root: true
+            });
+            
+            // Remove root from the original user
+            updates.root = false;
+          } else {
+            // Regular spouse behavior - no root status
+            await updateFamilyMember(newMemberId, {
+              spouseId: linkedMemberId,
+              parentId: null,
+              root: false
+            });
+          }
           break;
           
         case 'sibling':
           // Share the same parentId as the linked member
           const linkedMemberForSibling = await getFamilyMember(linkedMemberId);
           if (linkedMemberForSibling.parentId) {
-            // Both have the same parentId
+            // Both have the same parentId, siblings inherit root status from root users
+            const inheritRoot = linkedMemberForSibling.root === true;
             await updateFamilyMember(newMemberId, {
-              parentId: linkedMemberForSibling.parentId
+              parentId: linkedMemberForSibling.parentId,
+              root: inheritRoot
             });
           } else if (linkedMemberForSibling.childIds) {
             // LinkedMember is already a real parent, add new member as their child
@@ -132,9 +174,10 @@ export async function addFamilyMemberWithRelationships(formData) {
               updates.childIds = [...parentChildren, newMemberId];
             }
             
-            // Remove parentId from new member
+            // Remove parentId from new member, children do not inherit root
             await updateFamilyMember(newMemberId, {
-              parentId: null
+              parentId: null,
+              root: false
             });
           }
           break;
