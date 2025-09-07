@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react';
 import FamilyTree from '@/components/FamilyTree';
 import AddFamilyMemberForm from '@/components/AddFamilyMemberForm';
+import Modal from '@/components/Modal';
 
 export default function Home() {
   const [showAddForm, setShowAddForm] = useState(false);
@@ -118,18 +119,30 @@ export default function Home() {
           </div>
         </header>
 
-        {showAddForm && (
-          <div className="mb-8">
-            <AddFamilyMemberForm onMemberAdded={handleMemberAdded} />
-          </div>
-        )}
-
         <main>
           <FamilyTree 
             key={refreshTree} 
             ref={familyTreeRef}
           />
         </main>
+
+        <Modal 
+          isOpen={showAddForm}
+          onClose={() => setShowAddForm(false)}
+          title={
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">👥</span>
+              <span>Add New Family Member</span>
+            </div>
+          }
+        >
+          <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-4 mb-6 border border-blue-200">
+            <p className="text-blue-800 text-sm">
+              Create connections that span generations. Add family members and build your family tree with beautiful stories and memories.
+            </p>
+          </div>
+          <AddFamilyMemberForm onMemberAdded={handleMemberAdded} />
+        </Modal>
       </div>
     </div>
   );

@@ -15,6 +15,8 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
     linkedMemberId: '',
     relationshipType: ''
   });
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [existingMembers, setExistingMembers] = useState([]);
@@ -68,25 +70,22 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
       }
     }
 
-    // Validate sibling relationship
+    // Validate sibling relationship - only allow for root users
     if (formData.relationshipType === 'sibling' && formData.linkedMemberId) {
       const selectedMember = existingMembers.find(m => m.id === formData.linkedMemberId);
-      const hasParent = selectedMember && (
-        selectedMember.parentId || 
-        existingMembers.some(member => 
-          member.childIds && member.childIds.includes(selectedMember.id)
-        )
-      );
+      const isRootUser = selectedMember && selectedMember.root === true;
       
-      if (hasParent) {
+      if (!isRootUser) {
         const parents = existingMembers.filter(member => 
           member.childIds && member.childIds.includes(selectedMember.id)
         );
         
         setError(
-          `Cannot add sibling to ${selectedMember.name} who already has parents. ` +
-          `Please select their parent${parents.length > 1 ? 's' : ''} instead: ` +
-          `${parents.length > 0 ? parents.map(p => p.name).join(' or ') : 'their parent'}.`
+          `Siblings can only be added to root family members. ` +
+          (parents.length > 0 
+            ? `To add a sibling to ${selectedMember.name}, select their parent${parents.length > 1 ? 's' : ''} instead: ${parents.map(p => p.name).join(' or ')}.`
+            : `Please select a root family member or add as child to a parent.`
+          )
         );
         setIsLoading(false);
         return;
@@ -100,6 +99,7 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
         deathDate: formData.deathDate ? new Date(formData.deathDate) : null,
         linkedMemberId: formData.linkedMemberId.trim() || null,
         relationshipType: formData.relationshipType.trim() || null,
+        imageUrl: imagePreview || formData.imageUrl || '', // Use uploaded image or fallback to URL if provided
       };
 
       console.log('🔍 Debug: Submitting member data:', memberData);
@@ -132,6 +132,12 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
         linkedMemberId: '',
         relationshipType: ''
       });
+      setSelectedFile(null);
+      setImagePreview(null);
+      const fileInput = document.getElementById('imageFile');
+      if (fileInput) {
+        fileInput.value = '';
+      }
 
       console.log('🔍 Debug: Calling onMemberAdded callback');
       if (onMemberAdded) {
@@ -166,20 +172,44 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
     }));
   };
 
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        setError('Please select an image file');
+        return;
+      }
+      
+      // Validate file size (5MB max)
+      if (file.size > 5 * 1024 * 1024) {
+        setError('Image file size must be less than 5MB');
+        return;
+      }
+      
+      setSelectedFile(file);
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeImage = () => {
+    setSelectedFile(null);
+    setImagePreview(null);
+    // Reset the file input
+    const fileInput = document.getElementById('imageFile');
+    if (fileInput) {
+      fileInput.value = '';
+    }
+  };
+
   return (
-    <div className="max-w-2xl mx-auto">
-      <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-        <div className="bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-4">
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">👥</span>
-            <h2 className="text-xl font-bold text-white">Add New Family Member</h2>
-          </div>
-          <p className="text-blue-100 text-sm mt-1">
-            {isFirstUser ? "Create the first member of your family tree" : "Add a new family member and their relationship"}
-          </p>
-        </div>
-        
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6">
       
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-xl flex items-center gap-2">
@@ -268,22 +298,55 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="imageUrl" className="flex items-center gap-2 text-sm font-medium text-gray-700">
+            <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
               <span>📸</span>
-              <span>Photo URL</span>
+              <span>Photo</span>
             </label>
-            <input
-              type="url"
-              id="imageUrl"
-              name="imageUrl"
-              value={formData.imageUrl}
-              onChange={handleChange}
-              placeholder="https://example.com/photo.jpg"
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white"
-            />
+            
+            {imagePreview ? (
+              <div className="relative">
+                <img
+                  src={imagePreview}
+                  alt="Preview"
+                  className="w-32 h-32 rounded-xl object-cover border-2 border-gray-200"
+                />
+                <button
+                  type="button"
+                  onClick={removeImage}
+                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            ) : (
+              <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-blue-400 transition-colors">
+                <input
+                  type="file"
+                  id="imageFile"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+                <label
+                  htmlFor="imageFile"
+                  className="cursor-pointer flex flex-col items-center gap-2"
+                >
+                  <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+                    <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                  </div>
+                  <span className="text-sm text-gray-600">Click to upload photo</span>
+                  <span className="text-xs text-gray-400">PNG, JPG up to 5MB</span>
+                </label>
+              </div>
+            )}
+            
             <p className="text-xs text-gray-500 flex items-center gap-1">
               <span>💡</span>
-              <span>Optional - leave empty for a beautiful default landscape</span>
+              <span>Optional - a beautiful default landscape will be used if no photo is uploaded</span>
             </p>
           </div>
 
@@ -361,17 +424,12 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
                     })()}
                     {formData.linkedMemberId && (() => {
                       const selectedMember = existingMembers.find(m => m.id === formData.linkedMemberId);
-                      const hasParent = selectedMember && (
-                        // Check if this member has a parentId OR if they're in someone's childIds
-                        selectedMember.parentId || 
-                        existingMembers.some(member => 
-                          member.childIds && member.childIds.includes(selectedMember.id)
-                        )
-                      );
-                      return hasParent ? (
-                        <option value="sibling" disabled>👫 Sibling (link to their parent instead)</option>
-                      ) : (
+                      const isRootUser = selectedMember && selectedMember.root === true;
+                      
+                      return isRootUser ? (
                         <option value="sibling">👫 Sibling</option>
+                      ) : (
+                        <option value="sibling" disabled>👫 Sibling (only available for root users)</option>
                       );
                     })()}
                   </select>
@@ -384,6 +442,28 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
                       </p>
                     </div>
                   )}
+                  
+                  {formData.relationshipType === 'parent' && formData.linkedMemberId && (() => {
+                    const selectedMember = existingMembers.find(m => m.id === formData.linkedMemberId);
+                    const existingParents = existingMembers.filter(member => 
+                      member.childIds && member.childIds.includes(selectedMember.id)
+                    );
+                    
+                    if (existingParents.length > 0) {
+                      return (
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-2">
+                          <p className="text-xs text-blue-800 flex items-center gap-2">
+                            <span>🔄</span>
+                            <span>
+                              {selectedMember.name} already has parent{existingParents.length > 1 ? 's' : ''}: {existingParents.map(p => p.name).join(', ')}. 
+                              This person will be added as a spouse to {existingParents[0].name} instead.
+                            </span>
+                          </p>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
                   {formData.relationshipType === 'child' && formData.linkedMemberId && (() => {
                     const selectedMember = existingMembers.find(m => m.id === formData.linkedMemberId);
                     const hasSpouse = selectedMember?.spouseId;
@@ -402,15 +482,10 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
                   
                   {formData.linkedMemberId && (() => {
                     const selectedMember = existingMembers.find(m => m.id === formData.linkedMemberId);
-                    const hasParent = selectedMember && (
-                      selectedMember.parentId || 
-                      existingMembers.some(member => 
-                        member.childIds && member.childIds.includes(selectedMember.id)
-                      )
-                    );
+                    const isRootUser = selectedMember && selectedMember.root === true;
                     
-                    if (hasParent) {
-                      // Find the parent(s)
+                    if (!isRootUser && selectedMember) {
+                      // Find the parent(s) if they exist
                       const parents = existingMembers.filter(member => 
                         member.childIds && member.childIds.includes(selectedMember.id)
                       );
@@ -420,10 +495,10 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
                           <p className="text-xs text-blue-800 flex items-center gap-2">
                             <span>💡</span>
                             <span>
-                              To add a sibling to {selectedMember.name}, select their parent{parents.length > 1 ? 's' : ''} instead: 
+                              Siblings can only be added to root family members. 
                               {parents.length > 0 
-                                ? parents.map(p => p.name).join(' or ') 
-                                : 'their parent'
+                                ? ` To add a sibling to ${selectedMember.name}, select their parent${parents.length > 1 ? 's' : ''} instead: ${parents.map(p => p.name).join(' or ')}`
+                                : ` To add siblings, select a root family member or add them as children to a parent.`
                               }
                             </span>
                           </p>
@@ -437,37 +512,28 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
             </div>
           )}
 
-          <div className="flex gap-3 pt-4 border-t border-gray-100">
-            <button
-              type="button"
-              onClick={() => window.location.reload()}
-              className="px-6 py-3 border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 transition-colors duration-200 font-medium"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="flex-1 flex items-center justify-center gap-2 py-3 px-6 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl hover:from-blue-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium"
-            >
-              {isLoading ? (
-                <>
-                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" strokeOpacity="0.3"/>
-                    <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
-                  </svg>
-                  <span>Adding...</span>
-                </>
-              ) : (
-                <>
-                  <span>✨</span>
-                  <span>{isFirstUser ? 'Create First Member' : 'Add Family Member'}</span>
-                </>
-              )}
-            </button>
-          </div>
-        </form>
+      <div className="flex gap-3 pt-4 border-t border-gray-100">
+        <button
+          type="submit"
+          disabled={isLoading}
+          className="flex-1 flex items-center justify-center gap-2 py-3 px-6 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl hover:from-blue-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium"
+        >
+          {isLoading ? (
+            <>
+              <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" strokeOpacity="0.3"/>
+                <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+              </svg>
+              <span>Adding...</span>
+            </>
+          ) : (
+            <>
+              <span>✨</span>
+              <span>{isFirstUser ? 'Create First Member' : 'Add Family Member'}</span>
+            </>
+          )}
+        </button>
       </div>
-    </div>
+    </form>
   );
 }

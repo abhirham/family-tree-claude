@@ -67,37 +67,61 @@ export async function addFamilyMemberWithRelationships(formData) {
       
       switch (relationshipType) {
         case 'parent':
-          // New member (Anand) is becoming parent of linked member (Abhi)
-          // Get linked member's data to find siblings
-          const linkedMemberData = await getFamilyMember(linkedMemberId);
-          
-          // Get all people who share the same parentId as linkedMember (including linkedMember)
+          // Check if linked member already has parents
           const allMembers = await getAllFamilyMembers();
-          const allSiblings = allMembers.filter(member => 
-            member.parentId === linkedMemberData.parentId
+          const existingParents = allMembers.filter(member => 
+            member.childIds && member.childIds.includes(linkedMemberId)
           );
           
-          // Set up the NEW member (Anand) as actual parent with all siblings as children
-          const childIds = allSiblings.map(s => s.id);
-          console.log('🔍 Debug: Setting up new parent with childIds:', childIds);
-          console.log('🔍 Debug: New parent ID:', newMemberId);
-          
-          // The first parent added automatically takes over the root status
-          // Remove root from all previous root members (children who had root=true)
-          await updateFamilyMember(newMemberId, {
-            childIds: childIds,
-            parentId: null,  // Remove parentId from new parent
-            root: true  // First parent always gets root=true
-          });
-          
-          // Remove parentId and root from all siblings (they now have a real parent)
-          // Children lose root status when parent is added
-          console.log('🔍 Debug: Removing parentId and root from siblings:', allSiblings.map(s => s.name));
-          for (const sibling of allSiblings) {
-            await updateFamilyMember(sibling.id, {
-              parentId: null,
-              root: false
+          if (existingParents.length > 0) {
+            // Convert to spouse relationship with first existing parent
+            console.log('🔄 Debug: Converting parent to spouse relationship');
+            const existingParent = existingParents[0];
+            
+            // Set up bidirectional spouse relationship with existing parent
+            await updateFamilyMember(existingParent.id, {
+              spouseId: newMemberId
             });
+            await updateFamilyMember(newMemberId, {
+              spouseId: existingParent.id,
+              parentId: null,
+              root: false,
+              // Also add all the children to the new spouse
+              childIds: existingParent.childIds || []
+            });
+            
+            console.log(`🔄 Debug: Added ${memberData.name} as spouse to ${existingParent.name}`);
+          } else {
+            // Original parent logic for when no parent exists
+            // New member (Anand) is becoming parent of linked member (Abhi)
+            // Get linked member's data to find siblings
+            const linkedMemberData = await getFamilyMember(linkedMemberId);
+            
+            // Get all people who share the same parentId as linkedMember (including linkedMember)
+            const allSiblings = allMembers.filter(member => 
+              member.parentId === linkedMemberData.parentId
+            );
+            
+            // Set up the NEW member (Anand) as actual parent with all siblings as children
+            const childIds = allSiblings.map(s => s.id);
+            console.log('🔍 Debug: Setting up new parent with childIds:', childIds);
+            console.log('🔍 Debug: New parent ID:', newMemberId);
+            
+            // The first parent added automatically takes over the root status
+            await updateFamilyMember(newMemberId, {
+              childIds: childIds,
+              parentId: null,  // Remove parentId from new parent
+              root: true  // First parent always gets root=true
+            });
+            
+            // Remove parentId and root from all siblings (they now have a real parent)
+            console.log('🔍 Debug: Removing parentId and root from siblings:', allSiblings.map(s => s.name));
+            for (const sibling of allSiblings) {
+              await updateFamilyMember(sibling.id, {
+                parentId: null,
+                root: false
+              });
+            }
           }
           break;
           
@@ -160,12 +184,36 @@ export async function addFamilyMemberWithRelationships(formData) {
         case 'sibling':
           // Share the same parentId as the linked member
           const linkedMemberForSibling = await getFamilyMember(linkedMemberId);
-          if (linkedMemberForSibling.parentId) {
-            // Both have the same parentId, siblings inherit root status from root users
-            const inheritRoot = linkedMemberForSibling.root === true;
+          
+          // Check if the linked member is a root user
+          if (linkedMemberForSibling.root === true) {
+            // Adding sibling to a root user - both should be root users
+            if (linkedMemberForSibling.parentId) {
+              // Root user has parentId - share the same parentId and inherit root status
+              await updateFamilyMember(newMemberId, {
+                parentId: linkedMemberForSibling.parentId,
+                root: true  // Siblings of root users inherit root status
+              });
+            } else {
+              // Root user has no parentId - create a shared parentId for both siblings
+              const sharedParentId = generateUniqueParentId();
+              
+              // Update the existing root user to have the shared parentId
+              await updateFamilyMember(linkedMemberId, {
+                parentId: sharedParentId
+              });
+              
+              // Set the new sibling with the same parentId and root status
+              await updateFamilyMember(newMemberId, {
+                parentId: sharedParentId,
+                root: true  // Siblings of root users inherit root status
+              });
+            }
+          } else if (linkedMemberForSibling.parentId) {
+            // Non-root user with parentId - normal sibling relationship
             await updateFamilyMember(newMemberId, {
               parentId: linkedMemberForSibling.parentId,
-              root: inheritRoot
+              root: false
             });
           } else if (linkedMemberForSibling.childIds) {
             // LinkedMember is already a real parent, add new member as their child
