@@ -296,24 +296,116 @@ const FamilyTree = forwardRef((props, ref) => {
   };
 
 
-  const findPath = (startId, endId, visited = new Set()) => {
-    if (startId === endId) return [startId];
-    if (visited.has(startId)) return null;
+  const getPrioritizedConnections = (person) => {
+    const connections = [];
     
-    visited.add(startId);
-    const startMember = members.find(m => m.id === startId);
-    if (!startMember) return null;
+    // Priority 1: Children (direct descendants from childIds)
+    if (person.childIds && person.childIds.length > 0) {
+      person.childIds.forEach(childId => {
+        const child = members.find(m => m.id === childId);
+        if (child) {
+          connections.push(childId);
+        }
+      });
+    }
     
-    const connections = getRelatedMembers(startMember).map(r => r.member.id);
+    // Priority 2: Siblings (same parentId or share same parent through childIds)
+    if (person.parentId) {
+      // Find siblings with same parentId
+      const siblings = members.filter(member => 
+        member.id !== person.id &&
+        member.parentId === person.parentId
+      );
+      siblings.forEach(sibling => {
+        connections.push(sibling.id);
+      });
+    } else {
+      // If no parentId, check if this person and others are children of the same parent
+      const myParents = members.filter(member => 
+        member.childIds && member.childIds.includes(person.id)
+      );
+      
+      myParents.forEach(parent => {
+        if (parent.childIds) {
+          parent.childIds.forEach(siblingId => {
+            if (siblingId !== person.id && !connections.includes(siblingId)) {
+              connections.push(siblingId);
+            }
+          });
+        }
+      });
+    }
     
-    for (const connectionId of connections) {
-      const path = findPath(connectionId, endId, new Set(visited));
-      if (path) {
-        return [startId, ...path];
+    // Priority 3: Parents (people who have this person in their childIds)
+    const parents = members.filter(member => 
+      member.childIds && member.childIds.includes(person.id)
+    );
+    parents.forEach(parent => {
+      if (!connections.includes(parent.id)) {
+        connections.push(parent.id);
+      }
+    });
+    
+    // Priority 4: Spouse
+    if (person.spouseId) {
+      const spouse = members.find(m => m.id === person.spouseId);
+      if (spouse && !connections.includes(spouse.id)) {
+        connections.push(spouse.id);
       }
     }
     
-    return null;
+    // Priority 5: Step-children (spouse's children that aren't already included)
+    if (person.spouseId) {
+      const spouse = members.find(m => m.id === person.spouseId);
+      if (spouse && spouse.childIds) {
+        spouse.childIds.forEach(stepChildId => {
+          if (!connections.includes(stepChildId)) {
+            connections.push(stepChildId);
+          }
+        });
+      }
+    }
+    
+    // Priority 6: Find if this person is someone else's spouse (bidirectional spouse)
+    const spouseOfMember = members.find(member => member.spouseId === person.id);
+    if (spouseOfMember && !connections.includes(spouseOfMember.id)) {
+      connections.push(spouseOfMember.id);
+    }
+    
+    return connections;
+  };
+
+  const findPath = (startId, endId) => {
+    if (startId === endId) return [startId];
+    
+    // Use BFS to find the shortest path with prioritized relationships
+    const queue = [[startId]]; // Queue of paths
+    const visited = new Set([startId]);
+    
+    while (queue.length > 0) {
+      const currentPath = queue.shift();
+      const currentId = currentPath[currentPath.length - 1];
+      
+      const currentMember = members.find(m => m.id === currentId);
+      if (!currentMember) continue;
+      
+      // Get prioritized connections (children first, then siblings, then parents, then spouses)
+      const connections = getPrioritizedConnections(currentMember);
+      
+      for (const connectionId of connections) {
+        if (connectionId === endId) {
+          // Found the target - return the complete path
+          return [...currentPath, connectionId];
+        }
+        
+        if (!visited.has(connectionId)) {
+          visited.add(connectionId);
+          queue.push([...currentPath, connectionId]);
+        }
+      }
+    }
+    
+    return null; // No path found
   };
 
 
