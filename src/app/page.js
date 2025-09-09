@@ -30,14 +30,14 @@ export default function Home() {
   }, [refreshTree]); // Refresh when tree updates
 
   const handleMemberAdded = (memberData) => {
-    console.log('🔍 Debug: handleMemberAdded called with:', memberData);
-    console.log('🔍 Debug: Refreshing tree, current refreshTree:', refreshTree);
+    console.log('Debug: handleMemberAdded called with:', memberData);
+    console.log('Debug: Refreshing tree, current refreshTree:', refreshTree);
     setRefreshTree(prev => {
-      console.log('🔍 Debug: Setting refreshTree from', prev, 'to', prev + 1);
+      console.log('Debug: Setting refreshTree from', prev, 'to', prev + 1);
       return prev + 1;
     });
     setShowAddForm(false);
-    console.log('🔍 Debug: Form closed, tree should refresh');
+    console.log('Debug: Form closed, tree should refresh');
   };
 
   const handleSearchA = (searchValue = searchA) => {
@@ -63,13 +63,12 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-surface">
       {/* Fixed Top Bar */}
-      <header className="sticky top-0 z-30 bg-white shadow-airbnb border-b border-gray-200 ml-72">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8 py-4">
-          <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
+      <header className="sticky top-0 z-30 bg-white shadow-airbnb border-b border-gray-200">
+        <div className="px-6 py-4">
+          <div className="flex items-center justify-between gap-4">
             {/* Title */}
-            <div className="flex items-center gap-3">
-              <span className="text-3xl">🌳</span>
-              <h1 className="text-3xl font-semibold text-gray-800">
+            <div className="flex items-center min-w-0 flex-1">
+              <h1 className="text-2xl font-semibold text-gray-900 truncate">
                 Family Lineage
               </h1>
             </div>
@@ -78,7 +77,7 @@ export default function Home() {
             {/* Add Family Member Button */}
             <button
               onClick={() => setShowAddForm(!showAddForm)}
-              className={`inline-flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-airbnb whitespace-nowrap ${
+              className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-airbnb whitespace-nowrap flex-shrink-0 ${
                 showAddForm 
                   ? 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300' 
                   : 'bg-airbnb-rausch text-white hover:bg-red-600 shadow-airbnb hover:shadow-airbnb-hover'
@@ -86,13 +85,12 @@ export default function Home() {
             >
               {showAddForm ? (
                 <>
-                  <span>✕</span>
-                  <span>Close Form</span>
+                  <span>×</span>
+                  <span>Close</span>
                 </>
               ) : (
                 <>
-                  <span>👥</span>
-                  <span>Add Family Member</span>
+                  <span>Add Member</span>
                 </>
               )}
             </button>
@@ -118,12 +116,7 @@ export default function Home() {
       <Modal 
           isOpen={showAddForm}
           onClose={() => setShowAddForm(false)}
-          title={
-            <div className="flex items-center gap-3">
-              <span className="text-2xl">👥</span>
-              <span>Add New Family Member</span>
-            </div>
-          }
+          title="Add New Family Member"
         >
           <div className="bg-gray-50 rounded-lg p-4 mb-6 border border-gray-200">
             <p className="text-gray-700 text-sm">

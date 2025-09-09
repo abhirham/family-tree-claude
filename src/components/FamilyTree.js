@@ -24,11 +24,10 @@ function NavigationStack({ stack, onNavigateToMember, onClearStack, familyMember
   };
 
   return (
-    <div className="w-72 bg-white border-r border-gray-200 p-6 h-full overflow-y-auto">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-2">
-          <span className="text-2xl">🌳</span>
-          <h3 className="font-semibold text-gray-800">Family Tree</h3>
+    <div className="w-72 bg-white border-r border-gray-200 px-6 pb-6 h-full overflow-y-auto">
+      <div className="flex items-center justify-between mb-6 pt-6">
+        <div className="flex items-center">
+          <h3 className="font-semibold text-gray-800">Navigation</h3>
         </div>
         {stack.length > 0 && (
           <button
@@ -42,9 +41,8 @@ function NavigationStack({ stack, onNavigateToMember, onClearStack, familyMember
       
       {/* Compact Search Section */}
       <div className="bg-gray-50 rounded-lg p-4 mb-6 border border-gray-200">
-        <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-          <span>🔍</span>
-          <span>Search</span>
+        <h4 className="text-sm font-semibold text-gray-700 mb-3">
+          Search
         </h4>
         
         <div className="space-y-3">
@@ -58,13 +56,14 @@ function NavigationStack({ stack, onNavigateToMember, onClearStack, familyMember
               placeholder="Search family members..."
               displayKey="name"
               valueKey="id"
-              icon={<span>👤</span>}
               className="text-sm"
               clearable={true}
               onClear={handleClearSearch}
               renderOption={(member, isHighlighted) => (
                 <div className={`flex items-center gap-2 text-sm ${isHighlighted ? 'text-airbnb-rausch' : 'text-gray-900'}`}>
-                  <span className="text-xs">{member.root ? '👑' : '👤'}</span>
+                  <span className={`text-xs font-medium ${member.root ? 'text-airbnb-rausch' : 'text-gray-500'}`}>
+                    {member.root ? 'ROOT' : 'MEMBER'}
+                  </span>
                   <span>{member.name}</span>
                   {member.birthDate && (
                     <span className="text-xs text-gray-500 ml-auto">
@@ -97,7 +96,6 @@ function NavigationStack({ stack, onNavigateToMember, onClearStack, familyMember
                   placeholder="Select destination person..."
                   displayKey="name"
                   valueKey="id"
-                  icon={<span>🎯</span>}
                   className="text-sm"
                   clearable={true}
                   onClear={() => {
@@ -105,7 +103,9 @@ function NavigationStack({ stack, onNavigateToMember, onClearStack, familyMember
                   }}
                   renderOption={(member, isHighlighted) => (
                     <div className={`flex items-center gap-2 text-sm ${isHighlighted ? 'text-airbnb-babu' : 'text-gray-900'}`}>
-                      <span className="text-xs">{member.root ? '👑' : '👤'}</span>
+                      <span className={`text-xs font-medium ${member.root ? 'text-airbnb-babu' : 'text-gray-500'}`}>
+                        {member.root ? 'ROOT' : 'MEMBER'}
+                      </span>
                       <span>{member.name}</span>
                       {member.birthDate && (
                         <span className="text-xs text-gray-500 ml-auto">
@@ -130,7 +130,9 @@ function NavigationStack({ stack, onNavigateToMember, onClearStack, familyMember
       
       {stack.length === 0 ? (
         <div className="text-center py-8">
-          <div className="text-4xl mb-4">👥</div>
+          <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+            <span className="text-gray-400 font-medium text-sm">TREE</span>
+          </div>
           <p className="text-sm text-gray-500 leading-relaxed">
             Click on family members to explore connections and build your navigation history
           </p>
@@ -230,9 +232,9 @@ const FamilyTree = forwardRef(({ familyMembers, searchA, setSearchA, searchB, se
         // Show root members initially (members with root=true)
         const rootMembers = familyMembers.filter(member => member.root === true);
         
-        console.log('🔍 Debug: All family members:', familyMembers);
-        console.log('🔍 Debug: Root members:', rootMembers);
-        console.log('🔍 Debug: Setting displayed members to:', rootMembers.length);
+        console.log('Debug: All family members:', familyMembers);
+        console.log('Debug: Root members:', rootMembers);
+        console.log('Debug: Setting displayed members to:', rootMembers.length);
         
         setDisplayedMembers(rootMembers);
       } catch (err) {
@@ -531,8 +533,8 @@ const FamilyTree = forwardRef(({ familyMembers, searchA, setSearchA, searchB, se
 
   return (
     <div className="flex min-h-screen">
-      {/* Left Sidebar - Navigation Stack */}
-      <div className="fixed left-0 top-0 h-screen w-72 z-40">
+      {/* Left Sidebar - Navigation Stack - Hidden on mobile/tablet */}
+      <div className="hidden lg:block fixed left-0 top-20 h-[calc(100vh-5rem)] w-72 z-40 border-t-0">
         <NavigationStack 
           stack={navigationStack}
           onNavigateToMember={handleNavigateFromStack}
@@ -549,18 +551,19 @@ const FamilyTree = forwardRef(({ familyMembers, searchA, setSearchA, searchB, se
         />
       </div>
       
-      {/* Main Content with left margin for sidebar */}
-      <div className="flex-1 ml-72 p-6 overflow-auto">
+      {/* Main Content with left margin for sidebar on large screens only */}
+      <div className="flex-1 lg:ml-72 overflow-auto mt-20">
 
         {/* Family Tree Display */}
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-6xl mx-auto px-6">
           {displayedMembers.length === 0 ? (
             <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
-              <div className="text-6xl mb-6">🌳</div>
+              <div className="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
+                <span className="text-gray-400 font-semibold">TREE</span>
+              </div>
               <h2 className="text-2xl font-semibold text-gray-800 mb-4">Your Family Tree Awaits</h2>
               <p className="text-gray-600 text-lg mb-6">Start building your family history by adding your first family member</p>
               <div className="inline-flex items-center gap-2 text-sm text-gray-500">
-                <span>✨</span>
                 <span>Click "Add Family Member" above to begin</span>
               </div>
             </div>
@@ -585,7 +588,6 @@ const FamilyTree = forwardRef(({ familyMembers, searchA, setSearchA, searchB, se
                       members={groups.spouses}
                       onMemberClick={handleMemberClick}
                       currentPerson={currentPerson}
-                      icon="💑"
                     />
                     
                     <RelationshipSection
@@ -593,7 +595,6 @@ const FamilyTree = forwardRef(({ familyMembers, searchA, setSearchA, searchB, se
                       members={groups.children}
                       onMemberClick={handleMemberClick}
                       currentPerson={currentPerson}
-                      icon="👶"
                     />
                     
                     <RelationshipSection
@@ -601,7 +602,6 @@ const FamilyTree = forwardRef(({ familyMembers, searchA, setSearchA, searchB, se
                       members={groups.stepChildren}
                       onMemberClick={handleMemberClick}
                       currentPerson={currentPerson}
-                      icon="👦"
                     />
                     
                     <RelationshipSection
@@ -609,7 +609,6 @@ const FamilyTree = forwardRef(({ familyMembers, searchA, setSearchA, searchB, se
                       members={groups.parents}
                       onMemberClick={handleMemberClick}
                       currentPerson={currentPerson}
-                      icon="👨‍👩‍👧‍👦"
                     />
                     
                     <RelationshipSection
@@ -617,7 +616,6 @@ const FamilyTree = forwardRef(({ familyMembers, searchA, setSearchA, searchB, se
                       members={groups.siblings}
                       onMemberClick={handleMemberClick}
                       currentPerson={currentPerson}
-                      icon="👫"
                     />
                   </div>
                 );

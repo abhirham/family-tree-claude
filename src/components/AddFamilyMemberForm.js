@@ -315,7 +315,7 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
                 <button
                   type="button"
                   onClick={removeImage}
-                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-airbnb shadow-airbnb hover:shadow-airbnb-hover"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -551,7 +551,7 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
         <button
           type="submit"
           disabled={isLoading}
-          className="flex-1 flex items-center justify-center gap-2 py-3 px-6 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl hover:from-blue-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium"
+          className="flex-1 flex items-center justify-center gap-2 py-3 px-6 bg-airbnb-rausch text-white rounded-lg hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-airbnb font-medium shadow-airbnb hover:shadow-airbnb-hover"
         >
           {isLoading ? (
             <>
@@ -563,7 +563,6 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
             </>
           ) : (
             <>
-              <span>✨</span>
               <span>{isFirstUser ? 'Create First Member' : 'Add Family Member'}</span>
             </>
           )}
