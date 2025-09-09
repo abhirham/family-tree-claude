@@ -25,7 +25,7 @@ function NavigationStack({
     setSelectedPerson(member);
     // Auto-trigger search when person is selected
     if (member && onSearchA) {
-      setTimeout(() => onSearchA(), 100);
+      setTimeout(() => onSearchA(value), 100);
     }
   };
 
