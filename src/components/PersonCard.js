@@ -63,7 +63,7 @@ function PersonCard({ member, onClick, isSelected = false, relationshipType = nu
 
   if (isHero) {
     return (
-      <div className="bg-white rounded-2xl shadow-lg overflow-hidden mb-8">
+      <div className="bg-white shadow-airbnb rounded-lg overflow-hidden mb-8 border border-gray-200">
         <div className="relative h-64">
           <Image
             src={member.imageUrl || getDefaultImage()}
@@ -71,9 +71,9 @@ function PersonCard({ member, onClick, isSelected = false, relationshipType = nu
             fill
             className="object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
           <div className="absolute bottom-6 left-6 text-white">
-            <h1 className="text-3xl font-bold mb-2">{member.name}</h1>
+            <h1 className="text-3xl font-semibold mb-2">{member.name}</h1>
             {formatDateRange(member.birthDate, member.deathDate) && (
               <p className="text-lg opacity-90">
                 {formatDateRange(member.birthDate, member.deathDate)}
@@ -96,9 +96,9 @@ function PersonCard({ member, onClick, isSelected = false, relationshipType = nu
 
   return (
     <div 
-      className={`group relative bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden ${
-        isSelected ? 'ring-2 ring-blue-500 ring-offset-2' : ''
-      } transform hover:scale-105`}
+      className={`group relative bg-white shadow-airbnb hover:shadow-airbnb-hover transition-airbnb cursor-pointer overflow-hidden rounded-lg border border-gray-200 ${
+        isSelected ? 'ring-2 ring-airbnb-rausch ring-offset-2' : ''
+      }`}
       onClick={() => onClick(member)}
     >
       {/* Relationship Badge */}
@@ -116,12 +116,12 @@ function PersonCard({ member, onClick, isSelected = false, relationshipType = nu
           fill
           className="object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
       </div>
 
       {/* Content Section */}
       <div className="p-4">
-        <h3 className="font-bold text-lg text-gray-900 mb-1 group-hover:text-blue-600 transition-colors">
+        <h3 className="font-semibold text-lg text-gray-800 mb-1 group-hover:text-airbnb-rausch transition-airbnb">
           {member.name}
         </h3>
         
@@ -157,7 +157,7 @@ function PersonCard({ member, onClick, isSelected = false, relationshipType = nu
       </div>
 
       {/* Hover overlay */}
-      <div className="absolute inset-0 bg-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+      <div className="absolute inset-0 bg-airbnb-rausch/3 opacity-0 group-hover:opacity-100 transition-airbnb pointer-events-none" />
     </div>
   );
 }

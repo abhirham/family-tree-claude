@@ -61,119 +61,27 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <header className="bg-white rounded-2xl shadow-lg p-6 mb-8">
+    <div className="min-h-screen bg-surface">
+      {/* Fixed Top Bar */}
+      <header className="sticky top-0 z-30 bg-white shadow-airbnb border-b border-gray-200 ml-72">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8 py-4">
           <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
             {/* Title */}
             <div className="flex items-center gap-3">
               <span className="text-3xl">🌳</span>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              <h1 className="text-3xl font-semibold text-gray-800">
                 Family Lineage
               </h1>
             </div>
 
-            {/* Search Controls */}
-            <div className="flex flex-col md:flex-row items-center gap-4 flex-1 max-w-4xl">
-              <div className="flex-1 max-w-md">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Search Person (A)
-                </label>
-                <div className="flex space-x-2">
-                  <div className="flex-1">
-                    <AutoComplete
-                      options={familyMembers}
-                      value={searchA}
-                      onChange={setSearchA}
-                      onSelect={(value, member) => {
-                        setSearchA(value);
-                        // Don't automatically trigger search - wait for button click
-                      }}
-                      placeholder="Type to search family members..."
-                      displayKey="name"
-                      valueKey="id"
-                      icon={<span>🔍</span>}
-                      className="py-2"
-                      clearable={true}
-                      onClear={() => {
-                        setSearchA('');
-                        // Don't automatically reset search - wait for button action
-                      }}
-                      renderOption={(member, isHighlighted) => (
-                        <div className={`flex items-center gap-2 ${isHighlighted ? 'text-blue-700' : 'text-gray-900'}`}>
-                          <span className="text-sm">{member.root ? '👑' : '👤'}</span>
-                          <span>{member.name}</span>
-                          {member.birthDate && (
-                            <span className="text-xs text-gray-500 ml-auto">
-                              {new Date(member.birthDate.seconds * 1000).getFullYear()}
-                            </span>
-                          )}
-                        </div>
-                      )}
-                    />
-                  </div>
-                  <button
-                    onClick={() => handleSearchA()}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium"
-                  >
-                    Find
-                  </button>
-                </div>
-              </div>
-              
-              <div className="flex-1 max-w-md">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Find Path to Person (B)
-                </label>
-                <div className="flex space-x-2">
-                  <div className="flex-1">
-                    <AutoComplete
-                      options={familyMembers}
-                      value={searchB}
-                      onChange={setSearchB}
-                      onSelect={(value, member) => {
-                        setSearchB(value);
-                        // Don't automatically trigger path search - wait for button click
-                      }}
-                      placeholder="Type to search destination person..."
-                      displayKey="name"
-                      valueKey="id"
-                      icon={<span>🎯</span>}
-                      className="py-2"
-                      clearable={true}
-                      onClear={() => {
-                        setSearchB('');
-                      }}
-                      renderOption={(member, isHighlighted) => (
-                        <div className={`flex items-center gap-2 ${isHighlighted ? 'text-green-700' : 'text-gray-900'}`}>
-                          <span className="text-sm">{member.root ? '👑' : '👤'}</span>
-                          <span>{member.name}</span>
-                          {member.birthDate && (
-                            <span className="text-xs text-gray-500 ml-auto">
-                              {new Date(member.birthDate.seconds * 1000).getFullYear()}
-                            </span>
-                          )}
-                        </div>
-                      )}
-                    />
-                  </div>
-                  <button
-                    onClick={() => handleSearchPath()}
-                    className="px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors font-medium"
-                  >
-                    Path
-                  </button>
-                </div>
-              </div>
-            </div>
 
             {/* Add Family Member Button */}
             <button
               onClick={() => setShowAddForm(!showAddForm)}
-              className={`inline-flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all duration-200 whitespace-nowrap ${
+              className={`inline-flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-airbnb whitespace-nowrap ${
                 showAddForm 
-                  ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' 
-                  : 'bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700 shadow-lg hover:shadow-xl transform hover:scale-105'
+                  ? 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300' 
+                  : 'bg-airbnb-rausch text-white hover:bg-red-600 shadow-airbnb hover:shadow-airbnb-hover'
               }`}
             >
               {showAddForm ? (
@@ -189,16 +97,25 @@ export default function Home() {
               )}
             </button>
           </div>
-        </header>
+        </div>
+      </header>
 
-        <main>
-          <FamilyTree 
-            key={refreshTree} 
-            ref={familyTreeRef}
-          />
-        </main>
+      {/* Main Content */}
+      <main>
+        <FamilyTree 
+          key={refreshTree} 
+          ref={familyTreeRef}
+          familyMembers={familyMembers}
+          searchA={searchA}
+          setSearchA={setSearchA}
+          searchB={searchB}
+          setSearchB={setSearchB}
+          onSearchA={handleSearchA}
+          onSearchPath={handleSearchPath}
+        />
+      </main>
 
-        <Modal 
+      <Modal 
           isOpen={showAddForm}
           onClose={() => setShowAddForm(false)}
           title={
@@ -208,14 +125,13 @@ export default function Home() {
             </div>
           }
         >
-          <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-4 mb-6 border border-blue-200">
-            <p className="text-blue-800 text-sm">
+          <div className="bg-gray-50 rounded-lg p-4 mb-6 border border-gray-200">
+            <p className="text-gray-700 text-sm">
               Create connections that span generations. Add family members and build your family tree with beautiful stories and memories.
             </p>
           </div>
           <AddFamilyMemberForm onMemberAdded={handleMemberAdded} />
         </Modal>
-      </div>
     </div>
   );
 }

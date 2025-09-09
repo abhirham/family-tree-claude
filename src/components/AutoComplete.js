@@ -187,7 +187,7 @@ export default function AutoComplete({
           placeholder={placeholder}
           disabled={disabled}
           required={required}
-          className={`w-full px-4 py-3 ${icon ? 'pl-10' : ''} ${clearable && inputValue ? 'pr-16' : 'pr-10'} border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
+          className={`w-full px-4 py-3 ${icon ? 'pl-10' : ''} ${clearable && inputValue ? 'pr-16' : 'pr-10'} border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-airbnb-rausch focus:border-airbnb-rausch transition-airbnb bg-white disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
           autoComplete="off"
         />
         {/* Right side icons */}
@@ -217,7 +217,7 @@ export default function AutoComplete({
       {showDropdown && filteredOptions.length > 0 && (
         <div
           ref={dropdownRef}
-          className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-60 overflow-y-auto"
+          className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-airbnb max-h-60 overflow-y-auto"
         >
           {filteredOptions.map((option, index) => {
             const displayValue = displayKey ? option[displayKey] : String(option);
@@ -226,9 +226,9 @@ export default function AutoComplete({
             return (
               <div
                 key={index}
-                className={`px-4 py-3 cursor-pointer transition-colors ${
+                className={`px-4 py-3 cursor-pointer transition-airbnb ${
                   isHighlighted 
-                    ? 'bg-blue-50 text-blue-700' 
+                    ? 'bg-red-50 text-airbnb-rausch' 
                     : 'hover:bg-gray-50'
                 }`}
                 onClick={() => handleOptionSelect(option)}

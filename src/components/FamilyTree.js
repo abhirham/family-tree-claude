@@ -4,8 +4,25 @@ import { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { getAllFamilyMembers } from '@/lib/firestore';
 import PersonCard from './PersonCard';
 import RelationshipSection from './RelationshipSection';
+import AutoComplete from './AutoComplete';
 
-function NavigationStack({ stack, onNavigateToMember, onClearStack }) {
+function NavigationStack({ stack, onNavigateToMember, onClearStack, familyMembers, searchA, setSearchA, searchB, setSearchB, onSearchA, onSearchPath, selectedPerson, setSelectedPerson }) {
+  
+  const handlePersonSelect = (value, member) => {
+    setSearchA(value);
+    setSelectedPerson(member);
+    // Auto-trigger search when person is selected
+    if (member && onSearchA) {
+      setTimeout(() => onSearchA(), 100);
+    }
+  };
+
+  const handleClearSearch = () => {
+    setSearchA('');
+    setSearchB('');
+    setSelectedPerson(null);
+  };
+
   return (
     <div className="w-72 bg-white border-r border-gray-200 p-6 h-full overflow-y-auto">
       <div className="flex items-center justify-between mb-6">
@@ -21,6 +38,94 @@ function NavigationStack({ stack, onNavigateToMember, onClearStack }) {
             Reset
           </button>
         )}
+      </div>
+      
+      {/* Compact Search Section */}
+      <div className="bg-gray-50 rounded-lg p-4 mb-6 border border-gray-200">
+        <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+          <span>🔍</span>
+          <span>Search</span>
+        </h4>
+        
+        <div className="space-y-3">
+          {/* Primary Search */}
+          <div>
+            <AutoComplete
+              options={familyMembers || []}
+              value={searchA}
+              onChange={setSearchA}
+              onSelect={handlePersonSelect}
+              placeholder="Search family members..."
+              displayKey="name"
+              valueKey="id"
+              icon={<span>👤</span>}
+              className="text-sm"
+              clearable={true}
+              onClear={handleClearSearch}
+              renderOption={(member, isHighlighted) => (
+                <div className={`flex items-center gap-2 text-sm ${isHighlighted ? 'text-airbnb-rausch' : 'text-gray-900'}`}>
+                  <span className="text-xs">{member.root ? '👑' : '👤'}</span>
+                  <span>{member.name}</span>
+                  {member.birthDate && (
+                    <span className="text-xs text-gray-500 ml-auto">
+                      {new Date(member.birthDate.seconds * 1000).getFullYear()}
+                    </span>
+                  )}
+                </div>
+              )}
+            />
+          </div>
+          
+          {/* Progressive: Show Path Finding only after person is selected */}
+          {selectedPerson && (
+            <div className="pt-3 border-t border-gray-200">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-xs text-gray-600">Find path from</span>
+                <span className="text-xs font-medium text-airbnb-rausch bg-red-50 px-2 py-1 rounded">
+                  {selectedPerson.name}
+                </span>
+                <span className="text-xs text-gray-600">to:</span>
+              </div>
+              <div className="space-y-2">
+                <AutoComplete
+                  options={familyMembers?.filter(m => m.id !== selectedPerson.id) || []}
+                  value={searchB}
+                  onChange={setSearchB}
+                  onSelect={(value, member) => {
+                    setSearchB(value);
+                  }}
+                  placeholder="Select destination person..."
+                  displayKey="name"
+                  valueKey="id"
+                  icon={<span>🎯</span>}
+                  className="text-sm"
+                  clearable={true}
+                  onClear={() => {
+                    setSearchB('');
+                  }}
+                  renderOption={(member, isHighlighted) => (
+                    <div className={`flex items-center gap-2 text-sm ${isHighlighted ? 'text-airbnb-babu' : 'text-gray-900'}`}>
+                      <span className="text-xs">{member.root ? '👑' : '👤'}</span>
+                      <span>{member.name}</span>
+                      {member.birthDate && (
+                        <span className="text-xs text-gray-500 ml-auto">
+                          {new Date(member.birthDate.seconds * 1000).getFullYear()}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                />
+                <button
+                  onClick={() => onSearchPath()}
+                  disabled={!searchB}
+                  className="w-full px-3 py-2 bg-airbnb-babu text-white rounded-lg hover:bg-teal-600 transition-airbnb font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Find Path
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
       
       {stack.length === 0 ? (
@@ -65,15 +170,14 @@ function NavigationStack({ stack, onNavigateToMember, onClearStack }) {
   );
 }
 
-const FamilyTree = forwardRef((props, ref) => {
+const FamilyTree = forwardRef(({ familyMembers, searchA, setSearchA, searchB, setSearchB, onSearchA, onSearchPath }, ref) => {
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [navigationStack, setNavigationStack] = useState([]);
   const [currentPerson, setCurrentPerson] = useState(null);
   const [displayedMembers, setDisplayedMembers] = useState([]);
-  const [searchA, setSearchA] = useState('');
-  const [searchB, setSearchB] = useState('');
+  const [selectedPerson, setSelectedPerson] = useState(null);
 
   useImperativeHandle(ref, () => ({
     handleSearchA: (searchTerm) => {
@@ -426,16 +530,27 @@ const FamilyTree = forwardRef((props, ref) => {
   }
 
   return (
-    <div className="flex h-screen">
+    <div className="flex min-h-screen">
       {/* Left Sidebar - Navigation Stack */}
-      <NavigationStack 
-        stack={navigationStack}
-        onNavigateToMember={handleNavigateFromStack}
-        onClearStack={handleClearStack}
-      />
+      <div className="fixed left-0 top-0 h-screen w-72 z-40">
+        <NavigationStack 
+          stack={navigationStack}
+          onNavigateToMember={handleNavigateFromStack}
+          onClearStack={handleClearStack}
+          familyMembers={familyMembers}
+          searchA={searchA}
+          setSearchA={setSearchA}
+          searchB={searchB}
+          setSearchB={setSearchB}
+          onSearchA={onSearchA}
+          onSearchPath={onSearchPath}
+          selectedPerson={selectedPerson}
+          setSelectedPerson={setSelectedPerson}
+        />
+      </div>
       
-      {/* Main Content */}
-      <div className="flex-1 p-6 overflow-auto">
+      {/* Main Content with left margin for sidebar */}
+      <div className="flex-1 ml-72 p-6 overflow-auto">
 
         {/* Family Tree Display */}
         <div className="max-w-6xl mx-auto">
