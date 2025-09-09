@@ -1,13 +1,25 @@
-'use client';
+"use client";
 
-import { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
-import { getAllFamilyMembers } from '@/lib/firestore';
-import PersonCard from './PersonCard';
-import RelationshipSection from './RelationshipSection';
-import AutoComplete from './AutoComplete';
+import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
+import { getAllFamilyMembers } from "@/lib/firestore";
+import PersonCard from "./PersonCard";
+import RelationshipSection from "./RelationshipSection";
+import AutoComplete from "./AutoComplete";
 
-function NavigationStack({ stack, onNavigateToMember, onClearStack, familyMembers, searchA, setSearchA, searchB, setSearchB, onSearchA, onSearchPath, selectedPerson, setSelectedPerson }) {
-  
+function NavigationStack({
+  stack,
+  onNavigateToMember,
+  onClearStack,
+  familyMembers,
+  searchA,
+  setSearchA,
+  searchB,
+  setSearchB,
+  onSearchA,
+  onSearchPath,
+  selectedPerson,
+  setSelectedPerson,
+}) {
   const handlePersonSelect = (value, member) => {
     setSearchA(value);
     setSelectedPerson(member);
@@ -18,8 +30,8 @@ function NavigationStack({ stack, onNavigateToMember, onClearStack, familyMember
   };
 
   const handleClearSearch = () => {
-    setSearchA('');
-    setSearchB('');
+    setSearchA("");
+    setSearchB("");
     setSelectedPerson(null);
   };
 
@@ -38,13 +50,11 @@ function NavigationStack({ stack, onNavigateToMember, onClearStack, familyMember
           </button>
         )}
       </div>
-      
+
       {/* Compact Search Section */}
       <div className="bg-gray-50 rounded-lg p-4 mb-6 border border-gray-200">
-        <h4 className="text-sm font-semibold text-gray-700 mb-3">
-          Search
-        </h4>
-        
+        <h4 className="text-sm font-semibold text-gray-700 mb-3">Search</h4>
+
         <div className="space-y-3">
           {/* Primary Search */}
           <div>
@@ -60,9 +70,17 @@ function NavigationStack({ stack, onNavigateToMember, onClearStack, familyMember
               clearable={true}
               onClear={handleClearSearch}
               renderOption={(member, isHighlighted) => (
-                <div className={`flex items-center gap-2 text-sm ${isHighlighted ? 'text-airbnb-rausch' : 'text-gray-900'}`}>
-                  <span className={`text-xs font-medium ${member.root ? 'text-airbnb-rausch' : 'text-gray-500'}`}>
-                    {member.root ? 'ROOT' : 'MEMBER'}
+                <div
+                  className={`flex items-center gap-2 text-sm ${
+                    isHighlighted ? "text-airbnb-rausch" : "text-gray-900"
+                  }`}
+                >
+                  <span
+                    className={`text-xs font-medium ${
+                      member.root ? "text-airbnb-rausch" : "text-gray-500"
+                    }`}
+                  >
+                    {member.root ? "ROOT" : "MEMBER"}
                   </span>
                   <span>{member.name}</span>
                   {member.birthDate && (
@@ -74,7 +92,7 @@ function NavigationStack({ stack, onNavigateToMember, onClearStack, familyMember
               )}
             />
           </div>
-          
+
           {/* Progressive: Show Path Finding only after person is selected */}
           {selectedPerson && (
             <div className="pt-3 border-t border-gray-200">
@@ -87,7 +105,10 @@ function NavigationStack({ stack, onNavigateToMember, onClearStack, familyMember
               </div>
               <div className="space-y-2">
                 <AutoComplete
-                  options={familyMembers?.filter(m => m.id !== selectedPerson.id) || []}
+                  options={
+                    familyMembers?.filter((m) => m.id !== selectedPerson.id) ||
+                    []
+                  }
                   value={searchB}
                   onChange={setSearchB}
                   onSelect={(value, member) => {
@@ -99,17 +120,27 @@ function NavigationStack({ stack, onNavigateToMember, onClearStack, familyMember
                   className="text-sm"
                   clearable={true}
                   onClear={() => {
-                    setSearchB('');
+                    setSearchB("");
                   }}
                   renderOption={(member, isHighlighted) => (
-                    <div className={`flex items-center gap-2 text-sm ${isHighlighted ? 'text-airbnb-babu' : 'text-gray-900'}`}>
-                      <span className={`text-xs font-medium ${member.root ? 'text-airbnb-babu' : 'text-gray-500'}`}>
-                        {member.root ? 'ROOT' : 'MEMBER'}
+                    <div
+                      className={`flex items-center gap-2 text-sm ${
+                        isHighlighted ? "text-airbnb-babu" : "text-gray-900"
+                      }`}
+                    >
+                      <span
+                        className={`text-xs font-medium ${
+                          member.root ? "text-airbnb-babu" : "text-gray-500"
+                        }`}
+                      >
+                        {member.root ? "ROOT" : "MEMBER"}
                       </span>
                       <span>{member.name}</span>
                       {member.birthDate && (
                         <span className="text-xs text-gray-500 ml-auto">
-                          {new Date(member.birthDate.seconds * 1000).getFullYear()}
+                          {new Date(
+                            member.birthDate.seconds * 1000
+                          ).getFullYear()}
                         </span>
                       )}
                     </div>
@@ -127,26 +158,29 @@ function NavigationStack({ stack, onNavigateToMember, onClearStack, familyMember
           )}
         </div>
       </div>
-      
+
       {stack.length === 0 ? (
         <div className="text-center py-8">
           <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
             <span className="text-gray-400 font-medium text-sm">TREE</span>
           </div>
           <p className="text-sm text-gray-500 leading-relaxed">
-            Click on family members to explore connections and build your navigation history
+            Click on family members to explore connections and build your
+            navigation history
           </p>
         </div>
       ) : (
         <div className="space-y-3">
-          <h4 className="text-sm font-medium text-gray-700 uppercase tracking-wide">Navigation History</h4>
+          <h4 className="text-sm font-medium text-gray-700 uppercase tracking-wide">
+            Navigation History
+          </h4>
           {stack.map((member, index) => (
             <div
               key={`${member.id}-${index}`}
               className={`flex items-center space-x-3 p-3 rounded-lg cursor-pointer transition-all ${
-                index === stack.length - 1 
-                  ? 'bg-blue-50 border border-blue-200' 
-                  : 'bg-gray-50 hover:bg-gray-100 border border-transparent'
+                index === stack.length - 1
+                  ? "bg-blue-50 border border-blue-200"
+                  : "bg-gray-50 hover:bg-gray-100 border border-transparent"
               }`}
               onClick={() => onNavigateToMember(member, index)}
             >
@@ -158,11 +192,15 @@ function NavigationStack({ stack, onNavigateToMember, onClearStack, familyMember
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <span className="text-sm font-medium text-gray-800 truncate block">{member.name}</span>
+                <span className="text-sm font-medium text-gray-800 truncate block">
+                  {member.name}
+                </span>
                 <span className="text-xs text-gray-500">Step {index + 1}</span>
               </div>
               {index === stack.length - 1 && (
-                <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded-full">Current</span>
+                <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded-full">
+                  Current
+                </span>
               )}
             </div>
           ))}
@@ -172,484 +210,516 @@ function NavigationStack({ stack, onNavigateToMember, onClearStack, familyMember
   );
 }
 
-const FamilyTree = forwardRef(({ familyMembers, searchA, setSearchA, searchB, setSearchB, onSearchA, onSearchPath }, ref) => {
-  const [members, setMembers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [navigationStack, setNavigationStack] = useState([]);
-  const [currentPerson, setCurrentPerson] = useState(null);
-  const [displayedMembers, setDisplayedMembers] = useState([]);
-  const [selectedPerson, setSelectedPerson] = useState(null);
-
-  useImperativeHandle(ref, () => ({
-    handleSearchA: (searchTerm) => {
-      if (!searchTerm.trim()) return;
-      
-      const foundMember = members.find(member => 
-        member.name.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      
-      if (foundMember) {
-        setNavigationStack([]);
-        handleMemberClick(foundMember);
-      } else {
-        alert('Person not found');
-      }
+const FamilyTree = forwardRef(
+  (
+    {
+      familyMembers,
+      searchA,
+      setSearchA,
+      searchB,
+      setSearchB,
+      onSearchA,
+      onSearchPath,
     },
-    handleSearchPath: (searchTermA, searchTermB) => {
-      if (!searchTermA.trim() || !searchTermB.trim()) return;
-      
-      const memberA = members.find(member => 
-        member.name.toLowerCase().includes(searchTermA.toLowerCase())
-      );
-      const memberB = members.find(member => 
-        member.name.toLowerCase().includes(searchTermB.toLowerCase())
-      );
-      
-      if (!memberA || !memberB) {
-        alert('One or both persons not found');
-        return;
-      }
-      
-      const path = findPath(memberA.id, memberB.id);
-      if (path) {
-        const pathMembers = path.map(id => members.find(m => m.id === id)).filter(Boolean);
-        setNavigationStack(pathMembers);
-        setCurrentPerson(memberB);
-        setDisplayedMembers([memberB]);
-      } else {
-        alert('No path found between the two people');
-      }
-    }
-  }));
+    ref
+  ) => {
+    const [members, setMembers] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [navigationStack, setNavigationStack] = useState([]);
+    const [currentPerson, setCurrentPerson] = useState(null);
+    const [displayedMembers, setDisplayedMembers] = useState([]);
+    const [selectedPerson, setSelectedPerson] = useState(null);
 
-  useEffect(() => {
-    const fetchMembers = async () => {
-      try {
-        const familyMembers = await getAllFamilyMembers();
-        setMembers(familyMembers);
-        
-        // Show root members initially (members with root=true)
-        const rootMembers = familyMembers.filter(member => member.root === true);
-        
-        console.log('Debug: All family members:', familyMembers);
-        console.log('Debug: Root members:', rootMembers);
-        console.log('Debug: Setting displayed members to:', rootMembers.length);
-        
-        setDisplayedMembers(rootMembers);
-      } catch (err) {
-        setError('Failed to load family members: ' + err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
+    useImperativeHandle(ref, () => ({
+      handleSearchA: (searchTerm) => {
+        if (!searchTerm.trim()) return;
 
-    fetchMembers();
-  }, []);
+        const foundMember = members.find((member) =>
+          member.name.toLowerCase().includes(searchTerm.toLowerCase())
+        );
 
-  const getRelatedMembers = (person) => {
-    const related = new Set();
-    const relatedWithTypes = [];
-
-    // Handle different relationship types based on person's structure
-    
-    // If person has parentId (they're in a sibling group)
-    if (person.parentId) {
-      // Add siblings (others with same parentId)
-      const siblings = members.filter(member => 
-        member.id !== person.id &&
-        member.parentId === person.parentId
-      );
-      
-      siblings.forEach(sibling => {
-        related.add(sibling.id);
-        relatedWithTypes.push({ member: sibling, type: 'Sibling' });
-      });
-    }
-
-    // If person has childIds (they're a parent)
-    if (person.childIds && person.childIds.length > 0) {
-      person.childIds.forEach(childId => {
-        const child = members.find(m => m.id === childId);
-        if (child) {
-          related.add(child.id);
-          relatedWithTypes.push({ member: child, type: 'Child' });
+        if (foundMember) {
+          setNavigationStack([]);
+          handleMemberClick(foundMember);
+        } else {
+          alert("Person not found");
         }
+      },
+      handleSearchPath: (searchTermA, searchTermB) => {
+        if (!searchTermA.trim() || !searchTermB.trim()) return;
+
+        const memberA = members.find((member) =>
+          member.name.toLowerCase().includes(searchTermA.toLowerCase())
+        );
+        const memberB = members.find((member) =>
+          member.name.toLowerCase().includes(searchTermB.toLowerCase())
+        );
+
+        if (!memberA || !memberB) {
+          alert("One or both persons not found");
+          return;
+        }
+
+        const path = findPath(memberA.id, memberB.id);
+        if (path) {
+          const pathMembers = path
+            .map((id) => members.find((m) => m.id === id))
+            .filter(Boolean);
+          setNavigationStack(pathMembers);
+          setCurrentPerson(memberB);
+          setDisplayedMembers([memberB]);
+        } else {
+          alert("No path found between the two people");
+        }
+      },
+    }));
+
+    useEffect(() => {
+      const fetchMembers = async () => {
+        try {
+          const familyMembers = await getAllFamilyMembers();
+          setMembers(familyMembers);
+
+          // Show root members initially (members with root=true)
+          const rootMembers = familyMembers.filter(
+            (member) => member.root === true
+          );
+
+          console.log("Debug: All family members:", familyMembers);
+          console.log("Debug: Root members:", rootMembers);
+          console.log(
+            "Debug: Setting displayed members to:",
+            rootMembers.length
+          );
+
+          setDisplayedMembers(rootMembers);
+        } catch (err) {
+          setError("Failed to load family members: " + err.message);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      fetchMembers();
+    }, []);
+
+    const getRelatedMembers = (person) => {
+      const related = new Set();
+      const relatedWithTypes = [];
+
+      // Handle different relationship types based on person's structure
+
+      // If person has parentId (they're in a sibling group)
+      if (person.parentId) {
+        // Add siblings (others with same parentId)
+        const siblings = members.filter(
+          (member) =>
+            member.id !== person.id && member.parentId === person.parentId
+        );
+
+        siblings.forEach((sibling) => {
+          related.add(sibling.id);
+          relatedWithTypes.push({ member: sibling, type: "Sibling" });
+        });
+      }
+
+      // If person has childIds (they're a parent)
+      if (person.childIds && person.childIds.length > 0) {
+        person.childIds.forEach((childId) => {
+          const child = members.find((m) => m.id === childId);
+          if (child) {
+            related.add(child.id);
+            relatedWithTypes.push({ member: child, type: "Child" });
+          }
+        });
+      }
+
+      // Find parents (people who have this person in their childIds)
+      const parents = members.filter(
+        (member) => member.childIds && member.childIds.includes(person.id)
+      );
+      parents.forEach((parent) => {
+        related.add(parent.id);
+        relatedWithTypes.push({ member: parent, type: "Parent" });
       });
-    }
 
-    // Find parents (people who have this person in their childIds)
-    const parents = members.filter(member => 
-      member.childIds && member.childIds.includes(person.id)
-    );
-    parents.forEach(parent => {
-      related.add(parent.id);
-      relatedWithTypes.push({ member: parent, type: 'Parent' });
-    });
+      // Add spouse
+      if (person.spouseId) {
+        const spouse = members.find((m) => m.id === person.spouseId);
+        if (spouse) {
+          related.add(spouse.id);
+          relatedWithTypes.push({ member: spouse, type: "Spouse" });
 
-    // Add spouse
-    if (person.spouseId) {
-      const spouse = members.find(m => m.id === person.spouseId);
-      if (spouse) {
-        related.add(spouse.id);
-        relatedWithTypes.push({ member: spouse, type: 'Spouse' });
-        
-        // Also include spouse's children as step-children if they're not already included
-        if (spouse.childIds) {
-          spouse.childIds.forEach(childId => {
+          // Also include spouse's children as step-children if they're not already included
+          if (spouse.childIds) {
+            spouse.childIds.forEach((childId) => {
+              if (!related.has(childId) && childId !== person.id) {
+                const child = members.find((m) => m.id === childId);
+                if (child) {
+                  related.add(child.id);
+                  relatedWithTypes.push({ member: child, type: "Step-Child" });
+                }
+              }
+            });
+          }
+        }
+      }
+
+      // Also find if this person is someone else's spouse
+      const spouseOfMember = members.find(
+        (member) => member.spouseId === person.id
+      );
+      if (spouseOfMember && !related.has(spouseOfMember.id)) {
+        related.add(spouseOfMember.id);
+        relatedWithTypes.push({ member: spouseOfMember, type: "Spouse" });
+
+        // Include spouse's children as step-children if they're not already included
+        if (spouseOfMember.childIds) {
+          spouseOfMember.childIds.forEach((childId) => {
             if (!related.has(childId) && childId !== person.id) {
-              const child = members.find(m => m.id === childId);
+              const child = members.find((m) => m.id === childId);
               if (child) {
                 related.add(child.id);
-                relatedWithTypes.push({ member: child, type: 'Step-Child' });
+                relatedWithTypes.push({ member: child, type: "Step-Child" });
               }
             }
           });
         }
       }
-    }
 
-    // Also find if this person is someone else's spouse
-    const spouseOfMember = members.find(member => member.spouseId === person.id);
-    if (spouseOfMember && !related.has(spouseOfMember.id)) {
-      related.add(spouseOfMember.id);
-      relatedWithTypes.push({ member: spouseOfMember, type: 'Spouse' });
-      
-      // Include spouse's children as step-children if they're not already included
-      if (spouseOfMember.childIds) {
-        spouseOfMember.childIds.forEach(childId => {
-          if (!related.has(childId) && childId !== person.id) {
-            const child = members.find(m => m.id === childId);
-            if (child) {
-              related.add(child.id);
-              relatedWithTypes.push({ member: child, type: 'Step-Child' });
-            }
+      return relatedWithTypes;
+    };
+
+    const groupRelatedMembers = (relatedMembers) => {
+      const groups = {
+        spouses: [],
+        children: [],
+        parents: [],
+        siblings: [],
+        stepChildren: [],
+      };
+
+      relatedMembers.forEach((item) => {
+        switch (item.type) {
+          case "Spouse":
+            groups.spouses.push(item);
+            break;
+          case "Child":
+            groups.children.push(item);
+            break;
+          case "Step-Child":
+            groups.stepChildren.push(item);
+            break;
+          case "Parent":
+            groups.parents.push(item);
+            break;
+          case "Sibling":
+            groups.siblings.push(item);
+            break;
+        }
+      });
+
+      return groups;
+    };
+
+    const getReverseRelationship = (relationshipType) => {
+      const reverseMap = {
+        parent: "Child",
+        child: "Parent",
+        spouse: "Spouse",
+        sibling: "Sibling",
+      };
+      return reverseMap[relationshipType];
+    };
+
+    const handleMemberClick = (member) => {
+      const relatedMembers = getRelatedMembers(member);
+      setCurrentPerson(member);
+      setDisplayedMembers([member, ...relatedMembers.map((r) => r.member)]);
+
+      // Add to navigation stack
+      setNavigationStack((prev) => [...prev, member]);
+    };
+
+    const handleNavigateFromStack = (member, index) => {
+      const relatedMembers = getRelatedMembers(member);
+      setCurrentPerson(member);
+      setDisplayedMembers([member, ...relatedMembers.map((r) => r.member)]);
+
+      // Trim navigation stack to the clicked position
+      setNavigationStack((prev) => prev.slice(0, index + 1));
+    };
+
+    const handleClearStack = () => {
+      setNavigationStack([]);
+      setCurrentPerson(null);
+
+      // Show root members again
+      const rootMembers = members.filter((member) => member.root === true);
+      setDisplayedMembers(rootMembers);
+    };
+
+    const getPrioritizedConnections = (person) => {
+      const connections = [];
+
+      // Priority 1: Children (direct descendants from childIds)
+      if (person.childIds && person.childIds.length > 0) {
+        person.childIds.forEach((childId) => {
+          const child = members.find((m) => m.id === childId);
+          if (child) {
+            connections.push(childId);
           }
         });
       }
-    }
 
-    return relatedWithTypes;
-  };
+      // Priority 2: Siblings (same parentId or share same parent through childIds)
+      if (person.parentId) {
+        // Find siblings with same parentId
+        const siblings = members.filter(
+          (member) =>
+            member.id !== person.id && member.parentId === person.parentId
+        );
+        siblings.forEach((sibling) => {
+          connections.push(sibling.id);
+        });
+      } else {
+        // If no parentId, check if this person and others are children of the same parent
+        const myParents = members.filter(
+          (member) => member.childIds && member.childIds.includes(person.id)
+        );
 
-  const groupRelatedMembers = (relatedMembers) => {
-    const groups = {
-      spouses: [],
-      children: [],
-      parents: [],
-      siblings: [],
-      stepChildren: []
-    };
-
-    relatedMembers.forEach(item => {
-      switch (item.type) {
-        case 'Spouse':
-          groups.spouses.push(item);
-          break;
-        case 'Child':
-          groups.children.push(item);
-          break;
-        case 'Step-Child':
-          groups.stepChildren.push(item);
-          break;
-        case 'Parent':
-          groups.parents.push(item);
-          break;
-        case 'Sibling':
-          groups.siblings.push(item);
-          break;
+        myParents.forEach((parent) => {
+          if (parent.childIds) {
+            parent.childIds.forEach((siblingId) => {
+              if (siblingId !== person.id && !connections.includes(siblingId)) {
+                connections.push(siblingId);
+              }
+            });
+          }
+        });
       }
-    });
 
-    return groups;
-  };
-
-  const getReverseRelationship = (relationshipType) => {
-    const reverseMap = {
-      'parent': 'Child',
-      'child': 'Parent',
-      'spouse': 'Spouse',
-      'sibling': 'Sibling'
-    };
-    return reverseMap[relationshipType];
-  };
-
-  const handleMemberClick = (member) => {
-    const relatedMembers = getRelatedMembers(member);
-    setCurrentPerson(member);
-    setDisplayedMembers([member, ...relatedMembers.map(r => r.member)]);
-    
-    // Add to navigation stack
-    setNavigationStack(prev => [...prev, member]);
-  };
-
-  const handleNavigateFromStack = (member, index) => {
-    const relatedMembers = getRelatedMembers(member);
-    setCurrentPerson(member);
-    setDisplayedMembers([member, ...relatedMembers.map(r => r.member)]);
-    
-    // Trim navigation stack to the clicked position
-    setNavigationStack(prev => prev.slice(0, index + 1));
-  };
-
-  const handleClearStack = () => {
-    setNavigationStack([]);
-    setCurrentPerson(null);
-    
-    // Show root members again
-    const rootMembers = members.filter(member => member.root === true);
-    setDisplayedMembers(rootMembers);
-  };
-
-
-  const getPrioritizedConnections = (person) => {
-    const connections = [];
-    
-    // Priority 1: Children (direct descendants from childIds)
-    if (person.childIds && person.childIds.length > 0) {
-      person.childIds.forEach(childId => {
-        const child = members.find(m => m.id === childId);
-        if (child) {
-          connections.push(childId);
+      // Priority 3: Parents (people who have this person in their childIds)
+      const parents = members.filter(
+        (member) => member.childIds && member.childIds.includes(person.id)
+      );
+      parents.forEach((parent) => {
+        if (!connections.includes(parent.id)) {
+          connections.push(parent.id);
         }
       });
-    }
-    
-    // Priority 2: Siblings (same parentId or share same parent through childIds)
-    if (person.parentId) {
-      // Find siblings with same parentId
-      const siblings = members.filter(member => 
-        member.id !== person.id &&
-        member.parentId === person.parentId
-      );
-      siblings.forEach(sibling => {
-        connections.push(sibling.id);
-      });
-    } else {
-      // If no parentId, check if this person and others are children of the same parent
-      const myParents = members.filter(member => 
-        member.childIds && member.childIds.includes(person.id)
-      );
-      
-      myParents.forEach(parent => {
-        if (parent.childIds) {
-          parent.childIds.forEach(siblingId => {
-            if (siblingId !== person.id && !connections.includes(siblingId)) {
-              connections.push(siblingId);
+
+      // Priority 4: Spouse
+      if (person.spouseId) {
+        const spouse = members.find((m) => m.id === person.spouseId);
+        if (spouse && !connections.includes(spouse.id)) {
+          connections.push(spouse.id);
+        }
+      }
+
+      // Priority 5: Step-children (spouse's children that aren't already included)
+      if (person.spouseId) {
+        const spouse = members.find((m) => m.id === person.spouseId);
+        if (spouse && spouse.childIds) {
+          spouse.childIds.forEach((stepChildId) => {
+            if (!connections.includes(stepChildId)) {
+              connections.push(stepChildId);
             }
           });
         }
-      });
-    }
-    
-    // Priority 3: Parents (people who have this person in their childIds)
-    const parents = members.filter(member => 
-      member.childIds && member.childIds.includes(person.id)
-    );
-    parents.forEach(parent => {
-      if (!connections.includes(parent.id)) {
-        connections.push(parent.id);
       }
-    });
-    
-    // Priority 4: Spouse
-    if (person.spouseId) {
-      const spouse = members.find(m => m.id === person.spouseId);
-      if (spouse && !connections.includes(spouse.id)) {
-        connections.push(spouse.id);
+
+      // Priority 6: Find if this person is someone else's spouse (bidirectional spouse)
+      const spouseOfMember = members.find(
+        (member) => member.spouseId === person.id
+      );
+      if (spouseOfMember && !connections.includes(spouseOfMember.id)) {
+        connections.push(spouseOfMember.id);
       }
-    }
-    
-    // Priority 5: Step-children (spouse's children that aren't already included)
-    if (person.spouseId) {
-      const spouse = members.find(m => m.id === person.spouseId);
-      if (spouse && spouse.childIds) {
-        spouse.childIds.forEach(stepChildId => {
-          if (!connections.includes(stepChildId)) {
-            connections.push(stepChildId);
+
+      return connections;
+    };
+
+    const findPath = (startId, endId) => {
+      if (startId === endId) return [startId];
+
+      // Use BFS to find the shortest path with prioritized relationships
+      const queue = [[startId]]; // Queue of paths
+      const visited = new Set([startId]);
+
+      while (queue.length > 0) {
+        const currentPath = queue.shift();
+        const currentId = currentPath[currentPath.length - 1];
+
+        const currentMember = members.find((m) => m.id === currentId);
+        if (!currentMember) continue;
+
+        // Get prioritized connections (children first, then siblings, then parents, then spouses)
+        const connections = getPrioritizedConnections(currentMember);
+
+        for (const connectionId of connections) {
+          if (connectionId === endId) {
+            // Found the target - return the complete path
+            return [...currentPath, connectionId];
           }
-        });
-      }
-    }
-    
-    // Priority 6: Find if this person is someone else's spouse (bidirectional spouse)
-    const spouseOfMember = members.find(member => member.spouseId === person.id);
-    if (spouseOfMember && !connections.includes(spouseOfMember.id)) {
-      connections.push(spouseOfMember.id);
-    }
-    
-    return connections;
-  };
 
-  const findPath = (startId, endId) => {
-    if (startId === endId) return [startId];
-    
-    // Use BFS to find the shortest path with prioritized relationships
-    const queue = [[startId]]; // Queue of paths
-    const visited = new Set([startId]);
-    
-    while (queue.length > 0) {
-      const currentPath = queue.shift();
-      const currentId = currentPath[currentPath.length - 1];
-      
-      const currentMember = members.find(m => m.id === currentId);
-      if (!currentMember) continue;
-      
-      // Get prioritized connections (children first, then siblings, then parents, then spouses)
-      const connections = getPrioritizedConnections(currentMember);
-      
-      for (const connectionId of connections) {
-        if (connectionId === endId) {
-          // Found the target - return the complete path
-          return [...currentPath, connectionId];
-        }
-        
-        if (!visited.has(connectionId)) {
-          visited.add(connectionId);
-          queue.push([...currentPath, connectionId]);
+          if (!visited.has(connectionId)) {
+            visited.add(connectionId);
+            queue.push([...currentPath, connectionId]);
+          }
         }
       }
+
+      return null; // No path found
+    };
+
+    if (loading) {
+      return (
+        <div className="flex justify-center items-center h-64">
+          <div className="text-lg">Loading family tree...</div>
+        </div>
+      );
     }
-    
-    return null; // No path found
-  };
 
+    if (error) {
+      return (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded max-w-md mx-auto">
+          {error}
+        </div>
+      );
+    }
 
-  if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="text-lg">Loading family tree...</div>
-      </div>
-    );
-  }
+      <div className="flex min-h-screen">
+        {/* Left Sidebar - Navigation Stack - Hidden on mobile/tablet */}
+        <div
+          className="hidden lg:block fixed left-0 w-72 z-40"
+          style={{ top: "74px", height: "calc(100vh - 74px)" }}
+        >
+          <NavigationStack
+            stack={navigationStack}
+            onNavigateToMember={handleNavigateFromStack}
+            onClearStack={handleClearStack}
+            familyMembers={familyMembers}
+            searchA={searchA}
+            setSearchA={setSearchA}
+            searchB={searchB}
+            setSearchB={setSearchB}
+            onSearchA={onSearchA}
+            onSearchPath={onSearchPath}
+            selectedPerson={selectedPerson}
+            setSelectedPerson={setSelectedPerson}
+          />
+        </div>
 
-  if (error) {
-    return (
-      <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded max-w-md mx-auto">
-        {error}
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex min-h-screen">
-      {/* Left Sidebar - Navigation Stack - Hidden on mobile/tablet */}
-      <div className="hidden lg:block fixed left-0 top-20 h-[calc(100vh-5rem)] w-72 z-40 border-t-0">
-        <NavigationStack 
-          stack={navigationStack}
-          onNavigateToMember={handleNavigateFromStack}
-          onClearStack={handleClearStack}
-          familyMembers={familyMembers}
-          searchA={searchA}
-          setSearchA={setSearchA}
-          searchB={searchB}
-          setSearchB={setSearchB}
-          onSearchA={onSearchA}
-          onSearchPath={onSearchPath}
-          selectedPerson={selectedPerson}
-          setSelectedPerson={setSelectedPerson}
-        />
-      </div>
-      
-      {/* Main Content with left margin for sidebar on large screens only */}
-      <div className="flex-1 lg:ml-72 overflow-auto mt-20">
-
-        {/* Family Tree Display */}
-        <div className="max-w-6xl mx-auto px-6">
-          {displayedMembers.length === 0 ? (
-            <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
-              <div className="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
-                <span className="text-gray-400 font-semibold">TREE</span>
+        {/* Main Content with left margin for sidebar on large screens only */}
+        <div className="flex-1 lg:ml-72 overflow-auto my-3">
+          {/* Family Tree Display */}
+          <div className=" mx-auto px-3">
+            {displayedMembers.length === 0 ? (
+              <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
+                <div className="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
+                  <span className="text-gray-400 font-semibold">TREE</span>
+                </div>
+                <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+                  Your Family Tree Awaits
+                </h2>
+                <p className="text-gray-600 text-lg mb-6">
+                  Start building your family history by adding your first family
+                  member
+                </p>
+                <div className="inline-flex items-center gap-2 text-sm text-gray-500">
+                  <span>Click "Add Family Member" above to begin</span>
+                </div>
               </div>
-              <h2 className="text-2xl font-semibold text-gray-800 mb-4">Your Family Tree Awaits</h2>
-              <p className="text-gray-600 text-lg mb-6">Start building your family history by adding your first family member</p>
-              <div className="inline-flex items-center gap-2 text-sm text-gray-500">
-                <span>Click "Add Family Member" above to begin</span>
+            ) : currentPerson ? (
+              <div>
+                {/* Hero Section for Selected Person */}
+                <PersonCard
+                  member={currentPerson}
+                  onClick={() => {}}
+                  isHero={true}
+                />
+
+                {/* Related Members by Relationship */}
+                {(() => {
+                  const relatedMembers = getRelatedMembers(currentPerson);
+                  const groups = groupRelatedMembers(relatedMembers);
+
+                  return (
+                    <div className="space-y-8">
+                      <RelationshipSection
+                        title="Spouse"
+                        members={groups.spouses}
+                        onMemberClick={handleMemberClick}
+                        currentPerson={currentPerson}
+                      />
+
+                      <RelationshipSection
+                        title="Children"
+                        members={groups.children}
+                        onMemberClick={handleMemberClick}
+                        currentPerson={currentPerson}
+                      />
+
+                      <RelationshipSection
+                        title="Step Children"
+                        members={groups.stepChildren}
+                        onMemberClick={handleMemberClick}
+                        currentPerson={currentPerson}
+                      />
+
+                      <RelationshipSection
+                        title="Parents"
+                        members={groups.parents}
+                        onMemberClick={handleMemberClick}
+                        currentPerson={currentPerson}
+                      />
+
+                      <RelationshipSection
+                        title="Siblings"
+                        members={groups.siblings}
+                        onMemberClick={handleMemberClick}
+                        currentPerson={currentPerson}
+                      />
+                    </div>
+                  );
+                })()}
               </div>
-            </div>
-          ) : currentPerson ? (
-            <div>
-              {/* Hero Section for Selected Person */}
-              <PersonCard 
-                member={currentPerson} 
-                onClick={() => {}}
-                isHero={true}
-              />
-              
-              {/* Related Members by Relationship */}
-              {(() => {
-                const relatedMembers = getRelatedMembers(currentPerson);
-                const groups = groupRelatedMembers(relatedMembers);
-                
-                return (
-                  <div className="space-y-8">
-                    <RelationshipSection
-                      title="Spouse"
-                      members={groups.spouses}
-                      onMemberClick={handleMemberClick}
-                      currentPerson={currentPerson}
-                    />
-                    
-                    <RelationshipSection
-                      title="Children"
-                      members={groups.children}
-                      onMemberClick={handleMemberClick}
-                      currentPerson={currentPerson}
-                    />
-                    
-                    <RelationshipSection
-                      title="Step Children"
-                      members={groups.stepChildren}
-                      onMemberClick={handleMemberClick}
-                      currentPerson={currentPerson}
-                    />
-                    
-                    <RelationshipSection
-                      title="Parents"
-                      members={groups.parents}
-                      onMemberClick={handleMemberClick}
-                      currentPerson={currentPerson}
-                    />
-                    
-                    <RelationshipSection
-                      title="Siblings"
-                      members={groups.siblings}
-                      onMemberClick={handleMemberClick}
-                      currentPerson={currentPerson}
-                    />
+            ) : (
+              <div>
+                {/* Root Members Display */}
+                <div className="bg-white rounded-2xl shadow-lg p-8 mb-8">
+                  <div className="text-center mb-8">
+                    <h2 className="text-3xl font-bold text-gray-800 mb-2">
+                      Family Tree
+                    </h2>
+                    <p className="text-gray-600">
+                      Root family members - click on anyone to explore their
+                      connections
+                    </p>
                   </div>
-                );
-              })()}
-            </div>
-          ) : (
-            <div>
-              {/* Root Members Display */}
-              <div className="bg-white rounded-2xl shadow-lg p-8 mb-8">
-                <div className="text-center mb-8">
-                  <h2 className="text-3xl font-bold text-gray-800 mb-2">Family Tree</h2>
-                  <p className="text-gray-600">
-                    Root family members - click on anyone to explore their connections
-                  </p>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {displayedMembers.map((member) => (
-                    <PersonCard
-                      key={member.id} 
-                      member={member} 
-                      onClick={handleMemberClick}
-                      isSelected={false}
-                    />
-                  ))}
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {displayedMembers.map((member) => (
+                      <PersonCard
+                        key={member.id}
+                        member={member}
+                        onClick={handleMemberClick}
+                        isSelected={false}
+                      />
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
-    </div>
-  );
-});
+    );
+  }
+);
 
-FamilyTree.displayName = 'FamilyTree';
+FamilyTree.displayName = "FamilyTree";
 export default FamilyTree;
