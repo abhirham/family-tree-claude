@@ -10,7 +10,7 @@ import {
   orderBy, 
   where 
 } from 'firebase/firestore';
-import { db } from './firebase';
+import { db, auth } from './firebase';
 
 const COLLECTION_NAME = 'familyMembers';
 const USERS_COLLECTION_NAME = 'users';
@@ -22,11 +22,17 @@ function generateDummyParentId() {
 
 // Add a new family member with relationship processing
 export async function addFamilyMember(memberData) {
+  // Check if user is authenticated
+  if (!auth.currentUser) {
+    throw new Error('Authentication required to add family members');
+  }
+  
   try {
     const docRef = await addDoc(collection(db, COLLECTION_NAME), {
       ...memberData,
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
+      createdBy: auth.currentUser.uid // Track who created the record
     });
     return docRef.id;
   } catch (error) {
@@ -38,6 +44,11 @@ export async function addFamilyMember(memberData) {
 
 // Add family member with relationship processing
 export async function addFamilyMemberWithRelationships(formData) {
+  // Check if user is authenticated
+  if (!auth.currentUser) {
+    throw new Error('Authentication required to add family members');
+  }
+  
   const { linkedMemberId, relationshipType, ...memberData } = formData;
   
   try {
@@ -331,11 +342,17 @@ export async function getFamilyMember(id) {
 
 // Update a family member
 export async function updateFamilyMember(id, updates) {
+  // Check if user is authenticated
+  if (!auth.currentUser) {
+    throw new Error('Authentication required to update family members');
+  }
+  
   try {
     const docRef = doc(db, COLLECTION_NAME, id);
     await updateDoc(docRef, {
       ...updates,
-      updatedAt: new Date()
+      updatedAt: new Date(),
+      updatedBy: auth.currentUser.uid // Track who updated the record
     });
   } catch (error) {
     console.error('Error updating family member:', error);
@@ -345,6 +362,11 @@ export async function updateFamilyMember(id, updates) {
 
 // Delete a family member
 export async function deleteFamilyMember(id) {
+  // Check if user is authenticated
+  if (!auth.currentUser) {
+    throw new Error('Authentication required to delete family members');
+  }
+  
   try {
     const docRef = doc(db, COLLECTION_NAME, id);
     await deleteDoc(docRef);

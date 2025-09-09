@@ -3,19 +3,23 @@
 import { useState, useRef, useEffect } from 'react';
 import FamilyTree from '@/components/FamilyTree';
 import AddFamilyMemberForm from '@/components/AddFamilyMemberForm';
+import LoginForm from '@/components/LoginForm';
 import Modal from '@/components/Modal';
 import AutoComplete from '@/components/AutoComplete';
 import { getAllFamilyMembers } from '@/lib/firestore';
+import { useAuth } from '@/context/AuthContext';
 
 export default function Home() {
+  const { user, loading, logout } = useAuth();
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showLoginForm, setShowLoginForm] = useState(false);
   const [refreshTree, setRefreshTree] = useState(0);
   const [searchA, setSearchA] = useState('');
   const [searchB, setSearchB] = useState('');
   const [familyMembers, setFamilyMembers] = useState([]);
   const familyTreeRef = useRef(null);
 
-  // Fetch family members for search autocomplete
+  // Fetch family members for search autocomplete (always load for viewing)
   useEffect(() => {
     const fetchMembers = async () => {
       try {
@@ -60,6 +64,18 @@ export default function Home() {
     }
   };
 
+  // Show loading spinner while checking auth state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-surface flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 mx-auto mb-4 border-4 border-airbnb-rausch border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-surface">
       {/* Fixed Top Bar */}
@@ -71,29 +87,65 @@ export default function Home() {
               <h1 className="text-2xl font-semibold text-gray-900 truncate">
                 Family Lineage
               </h1>
+              {user && (
+                <span className="ml-4 text-sm text-gray-500 hidden sm:inline">
+                  Welcome, {user.email}
+                </span>
+              )}
             </div>
 
-
-            {/* Add Family Member Button */}
-            <button
-              onClick={() => setShowAddForm(!showAddForm)}
-              className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-airbnb whitespace-nowrap flex-shrink-0 ${
-                showAddForm 
-                  ? 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300' 
-                  : 'bg-airbnb-rausch text-white hover:bg-red-600 shadow-airbnb hover:shadow-airbnb-hover'
-              }`}
-            >
-              {showAddForm ? (
+            {/* Action Buttons */}
+            <div className="flex items-center gap-3">
+              {user ? (
                 <>
-                  <span>×</span>
-                  <span>Close</span>
+                  {/* Add Family Member Button - Only for authenticated users */}
+                  <button
+                    onClick={() => setShowAddForm(!showAddForm)}
+                    className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-airbnb whitespace-nowrap flex-shrink-0 ${
+                      showAddForm 
+                        ? 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300' 
+                        : 'bg-airbnb-rausch text-white hover:bg-red-600 shadow-airbnb hover:shadow-airbnb-hover'
+                    }`}
+                  >
+                    {showAddForm ? (
+                      <>
+                        <span>×</span>
+                        <span>Close</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Add Member</span>
+                      </>
+                    )}
+                  </button>
+
+                  {/* Logout Button */}
+                  <button
+                    onClick={logout}
+                    className="inline-flex items-center gap-2 px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-airbnb text-sm"
+                    title="Sign Out"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                    <span className="hidden sm:inline">Sign Out</span>
+                  </button>
                 </>
               ) : (
                 <>
-                  <span>Add Member</span>
+                  {/* Login Button - Only for unauthenticated users */}
+                  <button
+                    onClick={() => setShowLoginForm(true)}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-airbnb-rausch text-white hover:bg-red-600 rounded-lg font-medium transition-airbnb whitespace-nowrap flex-shrink-0 shadow-airbnb hover:shadow-airbnb-hover"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                    </svg>
+                    <span>Sign In</span>
+                  </button>
                 </>
               )}
-            </button>
+            </div>
           </div>
         </div>
       </header>
@@ -113,7 +165,9 @@ export default function Home() {
         />
       </main>
 
-      <Modal 
+      {/* Add Family Member Modal - Only accessible when authenticated */}
+      {user && (
+        <Modal 
           isOpen={showAddForm}
           onClose={() => setShowAddForm(false)}
           title="Add New Family Member"
@@ -125,6 +179,25 @@ export default function Home() {
           </div>
           <AddFamilyMemberForm onMemberAdded={handleMemberAdded} />
         </Modal>
+      )}
+
+      {/* Login Modal */}
+      <Modal 
+        isOpen={showLoginForm}
+        onClose={() => setShowLoginForm(false)}
+        title=""
+        showCloseButton={true}
+      >
+        <LoginForm 
+          onSuccess={() => {
+            setShowLoginForm(false);
+            console.log('Login successful');
+          }}
+          onError={(error) => {
+            console.error('Login error:', error);
+          }}
+        />
+      </Modal>
     </div>
   );
 }
