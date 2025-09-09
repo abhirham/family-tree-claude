@@ -143,9 +143,9 @@ function PersonCard({ member, onClick, isSelected = false, relationshipType = nu
 
         {/* Connection indicators */}
         <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100">
-          {member.childIds && member.childIds.length > 0 && (
-            <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full">
-              {member.childIds.length} child{member.childIds.length !== 1 ? 'ren' : ''}
+          {member.parentIds && member.parentIds.length > 0 && (
+            <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
+              Has parent{member.parentIds.length !== 1 ? 's' : ''}
             </span>
           )}
           {member.spouseId && (

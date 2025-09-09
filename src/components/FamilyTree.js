@@ -313,12 +313,23 @@ const FamilyTree = forwardRef(
 
       // Handle different relationship types based on person's structure
 
-      // If person has parentId (they're in a sibling group)
-      if (person.parentId) {
-        // Add siblings (others with same parentId)
+      // If person has parentIds (they have parents)
+      if (person.parentIds && person.parentIds.length > 0) {
+        // Find parents
+        person.parentIds.forEach((parentId) => {
+          const parent = members.find((m) => m.id === parentId);
+          if (parent) {
+            related.add(parent.id);
+            relatedWithTypes.push({ member: parent, type: "Parent" });
+          }
+        });
+        
+        // Add siblings (others with same parents)
         const siblings = members.filter(
           (member) =>
-            member.id !== person.id && member.parentId === person.parentId
+            member.id !== person.id && 
+            member.parentIds && 
+            member.parentIds.some(pid => person.parentIds.includes(pid))
         );
 
         siblings.forEach((sibling) => {
@@ -327,25 +338,15 @@ const FamilyTree = forwardRef(
         });
       }
 
-      // If person has childIds (they're a parent)
-      if (person.childIds && person.childIds.length > 0) {
-        person.childIds.forEach((childId) => {
-          const child = members.find((m) => m.id === childId);
-          if (child) {
-            related.add(child.id);
-            relatedWithTypes.push({ member: child, type: "Child" });
-          }
-        });
-      }
-
-      // Find parents (people who have this person in their childIds)
-      const parents = members.filter(
-        (member) => member.childIds && member.childIds.includes(person.id)
+      // Find children (people who have this person in their parentIds)
+      const children = members.filter(
+        (member) => member.parentIds && member.parentIds.includes(person.id)
       );
-      parents.forEach((parent) => {
-        related.add(parent.id);
-        relatedWithTypes.push({ member: parent, type: "Parent" });
+      children.forEach((child) => {
+        related.add(child.id);
+        relatedWithTypes.push({ member: child, type: "Child" });
       });
+
 
       // Add spouse
       if (person.spouseId) {
@@ -355,17 +356,15 @@ const FamilyTree = forwardRef(
           relatedWithTypes.push({ member: spouse, type: "Spouse" });
 
           // Also include spouse's children as step-children if they're not already included
-          if (spouse.childIds) {
-            spouse.childIds.forEach((childId) => {
-              if (!related.has(childId) && childId !== person.id) {
-                const child = members.find((m) => m.id === childId);
-                if (child) {
-                  related.add(child.id);
-                  relatedWithTypes.push({ member: child, type: "Step-Child" });
-                }
-              }
-            });
-          }
+          const spouseChildren = members.filter(
+            (member) => member.parentIds && member.parentIds.includes(spouse.id)
+          );
+          spouseChildren.forEach((child) => {
+            if (!related.has(child.id) && child.id !== person.id) {
+              related.add(child.id);
+              relatedWithTypes.push({ member: child, type: "Step-Child" });
+            }
+          });
         }
       }
 
@@ -378,17 +377,15 @@ const FamilyTree = forwardRef(
         relatedWithTypes.push({ member: spouseOfMember, type: "Spouse" });
 
         // Include spouse's children as step-children if they're not already included
-        if (spouseOfMember.childIds) {
-          spouseOfMember.childIds.forEach((childId) => {
-            if (!related.has(childId) && childId !== person.id) {
-              const child = members.find((m) => m.id === childId);
-              if (child) {
-                related.add(child.id);
-                relatedWithTypes.push({ member: child, type: "Step-Child" });
-              }
-            }
-          });
-        }
+        const spouseOfChildren = members.filter(
+          (member) => member.parentIds && member.parentIds.includes(spouseOfMember.id)
+        );
+        spouseOfChildren.forEach((child) => {
+          if (!related.has(child.id) && child.id !== person.id) {
+            related.add(child.id);
+            relatedWithTypes.push({ member: child, type: "Step-Child" });
+          }
+        });
       }
 
       return relatedWithTypes;
@@ -466,52 +463,36 @@ const FamilyTree = forwardRef(
     const getPrioritizedConnections = (person) => {
       const connections = [];
 
-      // Priority 1: Children (direct descendants from childIds)
-      if (person.childIds && person.childIds.length > 0) {
-        person.childIds.forEach((childId) => {
-          const child = members.find((m) => m.id === childId);
-          if (child) {
-            connections.push(childId);
-          }
-        });
-      }
+      // Priority 1: Children (people who have this person in their parentIds)
+      const children = members.filter(
+        (member) => member.parentIds && member.parentIds.includes(person.id)
+      );
+      children.forEach((child) => {
+        connections.push(child.id);
+      });
 
-      // Priority 2: Siblings (same parentId or share same parent through childIds)
-      if (person.parentId) {
-        // Find siblings with same parentId
+      // Priority 2: Siblings (people with same parentIds)
+      if (person.parentIds && person.parentIds.length > 0) {
+        // Find siblings with same parents
         const siblings = members.filter(
           (member) =>
-            member.id !== person.id && member.parentId === person.parentId
+            member.id !== person.id && 
+            member.parentIds && 
+            member.parentIds.some(pid => person.parentIds.includes(pid))
         );
         siblings.forEach((sibling) => {
           connections.push(sibling.id);
         });
-      } else {
-        // If no parentId, check if this person and others are children of the same parent
-        const myParents = members.filter(
-          (member) => member.childIds && member.childIds.includes(person.id)
-        );
+      }
 
-        myParents.forEach((parent) => {
-          if (parent.childIds) {
-            parent.childIds.forEach((siblingId) => {
-              if (siblingId !== person.id && !connections.includes(siblingId)) {
-                connections.push(siblingId);
-              }
-            });
+      // Priority 3: Parents (from parentIds)
+      if (person.parentIds && person.parentIds.length > 0) {
+        person.parentIds.forEach((parentId) => {
+          if (!connections.includes(parentId)) {
+            connections.push(parentId);
           }
         });
       }
-
-      // Priority 3: Parents (people who have this person in their childIds)
-      const parents = members.filter(
-        (member) => member.childIds && member.childIds.includes(person.id)
-      );
-      parents.forEach((parent) => {
-        if (!connections.includes(parent.id)) {
-          connections.push(parent.id);
-        }
-      });
 
       // Priority 4: Spouse
       if (person.spouseId) {
@@ -523,14 +504,14 @@ const FamilyTree = forwardRef(
 
       // Priority 5: Step-children (spouse's children that aren't already included)
       if (person.spouseId) {
-        const spouse = members.find((m) => m.id === person.spouseId);
-        if (spouse && spouse.childIds) {
-          spouse.childIds.forEach((stepChildId) => {
-            if (!connections.includes(stepChildId)) {
-              connections.push(stepChildId);
-            }
-          });
-        }
+        const spouseChildren = members.filter(
+          (member) => member.parentIds && member.parentIds.includes(person.spouseId)
+        );
+        spouseChildren.forEach((stepChild) => {
+          if (!connections.includes(stepChild.id)) {
+            connections.push(stepChild.id);
+          }
+        });
       }
 
       // Priority 6: Find if this person is someone else's spouse (bidirectional spouse)

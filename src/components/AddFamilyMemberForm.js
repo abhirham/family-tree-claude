@@ -77,9 +77,9 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
       const isRootUser = selectedMember && selectedMember.root === true;
       
       if (!isRootUser) {
-        const parents = existingMembers.filter(member => 
-          member.childIds && member.childIds.includes(selectedMember.id)
-        );
+        const parents = selectedMember.parentIds && selectedMember.parentIds.length > 0 
+          ? existingMembers.filter(member => selectedMember.parentIds.includes(member.id))
+          : [];
         
         setError(
           `Siblings can only be added to root family members. ` +
@@ -520,9 +520,9 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
                   
                   {formData.relationshipType === 'parent' && formData.linkedMemberId && (() => {
                     const selectedMember = existingMembers.find(m => m.id === formData.linkedMemberId);
-                    const existingParents = existingMembers.filter(member => 
-                      member.childIds && member.childIds.includes(selectedMember.id)
-                    );
+                    const existingParents = selectedMember.parentIds && selectedMember.parentIds.length > 0 
+                      ? existingMembers.filter(member => selectedMember.parentIds.includes(member.id))
+                      : [];
                     
                     if (existingParents.length > 0) {
                       return (
@@ -565,9 +565,9 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
                     
                     if (!isRootUser && selectedMember) {
                       // Find the parent(s) if they exist
-                      const parents = existingMembers.filter(member => 
-                        member.childIds && member.childIds.includes(selectedMember.id)
-                      );
+                      const parents = selectedMember.parentIds && selectedMember.parentIds.length > 0 
+                        ? existingMembers.filter(member => selectedMember.parentIds.includes(member.id))
+                        : [];
                       
                       return (
                         <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-2">
