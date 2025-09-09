@@ -43,7 +43,10 @@ function NavigationStack({
         </div>
         {stack.length > 0 && (
           <button
-            onClick={onClearStack}
+            onClick={() => {
+              handleClearSearch();
+              onClearStack();
+            }}
             className="text-sm text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 px-3 py-1 rounded-full transition-colors"
           >
             Reset
