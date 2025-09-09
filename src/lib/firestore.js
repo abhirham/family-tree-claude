@@ -15,6 +15,11 @@ import { db } from './firebase';
 const COLLECTION_NAME = 'familyMembers';
 const USERS_COLLECTION_NAME = 'users';
 
+// Generate unique dummy parent ID for sibling groups
+function generateDummyParentId() {
+  return 'dummy_parent_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+}
+
 // Add a new family member with relationship processing
 export async function addFamilyMember(memberData) {
   try {
@@ -104,19 +109,29 @@ export async function addFamilyMemberWithRelationships(formData) {
             console.log(`🔄 Debug: Added ${memberData.name} as spouse to ${existingParent.name}`);
           } else {
             // Original parent logic for when no parent exists
-            // New member (Anand) is becoming parent of linked member (Abhi)
-            // Get linked member's data to find siblings
+            // New member is becoming parent of linked member
+            // Get linked member's data to find ALL siblings
             const linkedMemberData = await getFamilyMember(linkedMemberId);
             
-            // Get all people who are siblings (same generation without parents)
+            // Find all siblings of the linked member
             const allSiblings = [linkedMemberData]; // Start with the linked member
             
-            // Add any other root members that should become children
-            const otherRootMembers = allMembers.filter(member => 
-              member.root === true && member.id !== linkedMemberId && 
-              (!member.parentIds || member.parentIds.length === 0)
-            );
-            allSiblings.push(...otherRootMembers);
+            if (linkedMemberData.parentIds && linkedMemberData.parentIds.length > 0) {
+              // Find siblings who share the same parent IDs (including dummy parents)
+              const siblings = allMembers.filter(member => 
+                member.id !== linkedMemberId && 
+                member.parentIds && 
+                member.parentIds.some(pid => linkedMemberData.parentIds.includes(pid))
+              );
+              allSiblings.push(...siblings);
+            } else {
+              // No parents - find other root members without parents to group together
+              const otherRootMembers = allMembers.filter(member => 
+                member.root === true && member.id !== linkedMemberId && 
+                (!member.parentIds || member.parentIds.length === 0)
+              );
+              allSiblings.push(...otherRootMembers);
+            }
             
             console.log('🔍 Debug: Setting up new parent for children:', allSiblings.map(s => s.name));
             console.log('🔍 Debug: New parent ID:', newMemberId);
@@ -130,8 +145,12 @@ export async function addFamilyMemberWithRelationships(formData) {
             // Update all siblings to have this new parent in their parentIds
             console.log('🔍 Debug: Adding parent to children:', allSiblings.map(s => s.name));
             for (const sibling of allSiblings) {
+              // Replace dummy parent IDs or empty parentIds with the new real parent
+              const filteredParentIds = sibling.parentIds ? 
+                sibling.parentIds.filter(pid => !pid.startsWith('dummy_parent_')) : [];
+              
               await updateFamilyMember(sibling.id, {
-                parentIds: [newMemberId],
+                parentIds: [...filteredParentIds, newMemberId],
                 root: false
               });
             }
@@ -185,25 +204,57 @@ export async function addFamilyMemberWithRelationships(formData) {
               root: false
             });
           }
+          
+          // 🚨 BUG FIX: Update all existing children to have both parents
+          console.log('🔧 Bug Fix: Adding spouse to parent with existing children');
+          const familyMembers = await getAllFamilyMembers();
+          const existingChildren = familyMembers.filter(member => 
+            member.parentIds && member.parentIds.includes(linkedMemberId)
+          );
+          
+          console.log(`🔧 Found ${existingChildren.length} existing children to update:`, existingChildren.map(c => c.name));
+          
+          // Update each existing child to include the new spouse as a parent
+          for (const child of existingChildren) {
+            const updatedParentIds = [...child.parentIds];
+            if (!updatedParentIds.includes(newMemberId)) {
+              updatedParentIds.push(newMemberId);
+              await updateFamilyMember(child.id, {
+                parentIds: updatedParentIds
+              });
+              console.log(`🔧 Updated ${child.name} to have both parents:`, updatedParentIds);
+            }
+          }
+          
+          console.log('✅ Bug Fix: All existing children now have both parents');
           break;
           
         case 'sibling':
-          // Share the same parentId as the linked member
+          // Share the same parentIds as the linked member
           const linkedMemberForSibling = await getFamilyMember(linkedMemberId);
           
           // Check if the linked member is a root user
           if (linkedMemberForSibling.root === true) {
             // Adding sibling to a root user - both should be root users
             if (linkedMemberForSibling.parentIds && linkedMemberForSibling.parentIds.length > 0) {
-              // Root user has parents - share the same parentIds and inherit root status
+              // Root user already has parents - share the same parentIds and inherit root status
               await updateFamilyMember(newMemberId, {
                 parentIds: [...linkedMemberForSibling.parentIds],
                 root: true  // Siblings of root users inherit root status
               });
             } else {
-              // Root user has no parents - both should remain root users without parents
+              // Root user has no parents - create a dummy parent ID to group them as siblings
+              const dummyParentId = generateDummyParentId();
+              console.log('🔍 Debug: Creating dummy parent ID for root siblings:', dummyParentId);
+              
+              // Update the existing root user to have the dummy parent ID
+              await updateFamilyMember(linkedMemberId, {
+                parentIds: [dummyParentId]
+              });
+              
+              // Set the new sibling with the same dummy parent ID and root status
               await updateFamilyMember(newMemberId, {
-                parentIds: [],
+                parentIds: [dummyParentId],
                 root: true  // Siblings of root users inherit root status
               });
             }
@@ -214,9 +265,18 @@ export async function addFamilyMemberWithRelationships(formData) {
               root: false
             });
           } else {
-            // LinkedMember has no parents - they are effectively siblings in the same generation
+            // LinkedMember has no parents - create a dummy parent to group them as siblings
+            const dummyParentId = generateDummyParentId();
+            console.log('🔍 Debug: Creating dummy parent ID for non-root siblings:', dummyParentId);
+            
+            // Update the existing member to have the dummy parent ID
+            await updateFamilyMember(linkedMemberId, {
+              parentIds: [dummyParentId]
+            });
+            
+            // Set the new sibling with the same dummy parent ID
             await updateFamilyMember(newMemberId, {
-              parentIds: [],
+              parentIds: [dummyParentId],
               root: false
             });
           }

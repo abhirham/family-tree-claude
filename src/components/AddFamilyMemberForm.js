@@ -564,9 +564,12 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
                     const isRootUser = selectedMember && selectedMember.root === true;
                     
                     if (!isRootUser && selectedMember) {
-                      // Find the parent(s) if they exist
+                      // Find the real parent(s) if they exist (exclude dummy parents)
                       const parents = selectedMember.parentIds && selectedMember.parentIds.length > 0 
-                        ? existingMembers.filter(member => selectedMember.parentIds.includes(member.id))
+                        ? existingMembers.filter(member => 
+                            selectedMember.parentIds.includes(member.id) && 
+                            !member.id.startsWith('dummy_parent_')
+                          )
                         : [];
                       
                       return (

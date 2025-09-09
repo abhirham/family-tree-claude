@@ -315,16 +315,19 @@ const FamilyTree = forwardRef(
 
       // If person has parentIds (they have parents)
       if (person.parentIds && person.parentIds.length > 0) {
-        // Find parents
+        // Find real parents (exclude dummy parent IDs)
         person.parentIds.forEach((parentId) => {
-          const parent = members.find((m) => m.id === parentId);
-          if (parent) {
-            related.add(parent.id);
-            relatedWithTypes.push({ member: parent, type: "Parent" });
+          // Skip dummy parent IDs - they don't represent real people
+          if (!parentId.startsWith('dummy_parent_')) {
+            const parent = members.find((m) => m.id === parentId);
+            if (parent) {
+              related.add(parent.id);
+              relatedWithTypes.push({ member: parent, type: "Parent" });
+            }
           }
         });
         
-        // Add siblings (others with same parents)
+        // Add siblings (others with same parents, including dummy parent IDs)
         const siblings = members.filter(
           (member) =>
             member.id !== person.id && 
@@ -485,10 +488,11 @@ const FamilyTree = forwardRef(
         });
       }
 
-      // Priority 3: Parents (from parentIds)
+      // Priority 3: Parents (from parentIds, excluding dummy parents)
       if (person.parentIds && person.parentIds.length > 0) {
         person.parentIds.forEach((parentId) => {
-          if (!connections.includes(parentId)) {
+          // Skip dummy parent IDs - they don't represent real people
+          if (!parentId.startsWith('dummy_parent_') && !connections.includes(parentId)) {
             connections.push(parentId);
           }
         });
