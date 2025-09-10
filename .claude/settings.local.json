@@ -20,7 +20,11 @@
       "Bash(npm test)",
       "Bash(npm test:*)",
       "mcp__playwright__browser_fill_form",
-      "mcp__playwright__browser_select_option"
+      "mcp__playwright__browser_select_option",
+      "WebSearch",
+      "WebFetch(domain:www.w3.org)",
+      "WebFetch(domain:ux.stackexchange.com)",
+      "WebFetch(domain:medium.com)"
     ],
     "deny": [],
     "ask": []
