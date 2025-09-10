@@ -10,10 +10,12 @@ import {
   orderBy, 
   where 
 } from 'firebase/firestore';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { db, auth } from './firebase';
 
 const COLLECTION_NAME = 'familyMembers';
 const USERS_COLLECTION_NAME = 'users';
+const BRANCHES_COLLECTION_NAME = 'branches';
 
 // Generate unique dummy parent ID for sibling groups
 function generateDummyParentId() {
@@ -412,5 +414,381 @@ export async function testRelationshipFlow(parentName, childName) {
   } catch (error) {
     console.error('Error testing relationship flow:', error);
     return false;
+  }
+}
+
+// ===== USER MANAGEMENT FUNCTIONS =====
+
+// Create a new user profile in Firestore
+export async function createUserProfile(userData) {
+  if (!auth.currentUser) {
+    throw new Error('Authentication required to create user profiles');
+  }
+  
+  try {
+    const docRef = await addDoc(collection(db, USERS_COLLECTION_NAME), {
+      ...userData,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      createdBy: auth.currentUser.uid
+    });
+    return docRef.id;
+  } catch (error) {
+    console.error('Error creating user profile:', error);
+    throw error;
+  }
+}
+
+// Get all users
+export async function getAllUsers() {
+  try {
+    const q = query(collection(db, USERS_COLLECTION_NAME), orderBy('email'));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    throw error;
+  }
+}
+
+// Get a specific user profile
+export async function getUserProfile(uid) {
+  try {
+    const docRef = doc(db, USERS_COLLECTION_NAME, uid);
+    const docSnap = await getDoc(docRef);
+    
+    if (docSnap.exists()) {
+      return { id: docSnap.id, ...docSnap.data() };
+    } else {
+      return null;
+    }
+  } catch (error) {
+    console.error('Error fetching user profile:', error);
+    throw error;
+  }
+}
+
+// Update user profile
+export async function updateUserProfile(uid, updates) {
+  if (!auth.currentUser) {
+    throw new Error('Authentication required to update user profiles');
+  }
+  
+  try {
+    const docRef = doc(db, USERS_COLLECTION_NAME, uid);
+    await updateDoc(docRef, {
+      ...updates,
+      updatedAt: new Date(),
+      updatedBy: auth.currentUser.uid
+    });
+  } catch (error) {
+    console.error('Error updating user profile:', error);
+    throw error;
+  }
+}
+
+// ===== BRANCH MANAGEMENT FUNCTIONS =====
+
+// Create a new branch
+export async function createBranch(branchData) {
+  if (!auth.currentUser) {
+    throw new Error('Authentication required to create branches');
+  }
+  
+  try {
+    const docRef = await addDoc(collection(db, BRANCHES_COLLECTION_NAME), {
+      ...branchData,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      createdBy: auth.currentUser.uid
+    });
+    return docRef.id;
+  } catch (error) {
+    console.error('Error creating branch:', error);
+    throw error;
+  }
+}
+
+// Get all branches
+export async function getAllBranches() {
+  try {
+    const q = query(collection(db, BRANCHES_COLLECTION_NAME), orderBy('name'));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+  } catch (error) {
+    console.error('Error fetching branches:', error);
+    throw error;
+  }
+}
+
+// Get branches for a specific user
+export async function getUserBranches(uid) {
+  try {
+    const q = query(
+      collection(db, BRANCHES_COLLECTION_NAME), 
+      where('adminUids', 'array-contains', uid)
+    );
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+  } catch (error) {
+    console.error('Error fetching user branches:', error);
+    throw error;
+  }
+}
+
+// Calculate all descendants of a family member
+export async function calculateBranchMembers(rootMemberId) {
+  try {
+    const allMembers = await getAllFamilyMembers();
+    const branchMembers = new Set([rootMemberId]);
+    const visited = new Set();
+    
+    function findDescendants(memberId) {
+      if (visited.has(memberId)) return;
+      visited.add(memberId);
+      
+      // Find children
+      const children = allMembers.filter(member => 
+        member.parentIds && member.parentIds.includes(memberId)
+      );
+      
+      children.forEach(child => {
+        branchMembers.add(child.id);
+        findDescendants(child.id);
+      });
+      
+      // Find spouse
+      const member = allMembers.find(m => m.id === memberId);
+      if (member?.spouseId) {
+        branchMembers.add(member.spouseId);
+        findDescendants(member.spouseId);
+      }
+    }
+    
+    findDescendants(rootMemberId);
+    return Array.from(branchMembers);
+  } catch (error) {
+    console.error('Error calculating branch members:', error);
+    throw error;
+  }
+}
+
+// Create branch from a family member
+export async function createBranchFromMember(memberId, adminData) {
+  if (!auth.currentUser) {
+    throw new Error('Authentication required to create branches');
+  }
+  
+  try {
+    const member = await getFamilyMember(memberId);
+    if (!member) {
+      throw new Error('Family member not found');
+    }
+    
+    const branchName = `${member.name} Branch`;
+    let adminUid;
+    
+    // Handle admin creation or assignment
+    if (adminData.isExisting) {
+      // Assign existing admin
+      adminUid = adminData.uid;
+    } else {
+      // Create new admin
+      const userCredential = await createUserWithEmailAndPassword(
+        auth, 
+        adminData.email, 
+        adminData.tempPassword
+      );
+      adminUid = userCredential.user.uid;
+      
+      // Create user profile
+      await createUserProfile({
+        uid: adminUid,
+        email: adminData.email,
+        role: 'branch_admin',
+        branchIds: [], // Will be updated after branch creation
+        mustChangePassword: true
+      });
+    }
+    
+    // Create branch
+    const branchId = await createBranch({
+      name: branchName,
+      rootMemberId: memberId,
+      adminUids: [adminUid]
+    });
+    
+    // Calculate branch members
+    const branchMemberIds = await calculateBranchMembers(memberId);
+    
+    // Update family members with branch assignment
+    for (const memberIdToUpdate of branchMemberIds) {
+      await updateFamilyMember(memberIdToUpdate, {
+        branchId: branchId,
+        managedBy: [adminUid]
+      });
+    }
+    
+    // Update user profile with branch assignment
+    if (adminData.isExisting) {
+      const currentProfile = await getUserProfile(adminUid);
+      const updatedBranchIds = [...(currentProfile?.branchIds || []), branchId];
+      await updateUserProfile(adminUid, { branchIds: updatedBranchIds });
+    } else {
+      await updateUserProfile(adminUid, { branchIds: [branchId] });
+    }
+    
+    return {
+      branchId,
+      adminUid,
+      branchMemberIds
+    };
+    
+  } catch (error) {
+    console.error('Error creating branch from member:', error);
+    throw error;
+  }
+}
+
+// Check if user can edit a specific family member
+export async function canUserEditMember(userUid, memberId) {
+  try {
+    if (!userUid) return false;
+    
+    const userProfile = await getUserProfile(userUid);
+    if (!userProfile) return false;
+    
+    // Super admin can edit anyone
+    if (userProfile.role === 'super_admin') return true;
+    
+    const member = await getFamilyMember(memberId);
+    if (!member) return false;
+    
+    // Check if user is in the member's managedBy list
+    return member.managedBy && member.managedBy.includes(userUid);
+  } catch (error) {
+    console.error('Error checking user permissions:', error);
+    return false;
+  }
+}
+
+// Get user permissions
+export async function getUserPermissions(userUid) {
+  try {
+    if (!userUid) return { role: 'public', branches: [], canEditAll: false };
+    
+    const userProfile = await getUserProfile(userUid);
+    if (!userProfile) return { role: 'public', branches: [], canEditAll: false };
+    
+    const branches = await getUserBranches(userUid);
+    
+    return {
+      role: userProfile.role || 'branch_admin',
+      branches: branches,
+      canEditAll: userProfile.role === 'super_admin',
+      mustChangePassword: userProfile.mustChangePassword || false
+    };
+  } catch (error) {
+    console.error('Error getting user permissions:', error);
+    return { role: 'public', branches: [], canEditAll: false };
+  }
+}
+
+// Create super admin account (for initial setup)
+export async function createSuperAdmin(email, password) {
+  const wasSignedIn = !!auth.currentUser;
+  const previousUser = auth.currentUser;
+  
+  try {
+    let user;
+    let userCreated = false;
+    
+    try {
+      // Try to create Firebase Auth user
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      user = userCredential.user;
+      userCreated = true;
+      console.log('Firebase Auth user created:', user.uid);
+    } catch (authError) {
+      if (authError.code === 'auth/email-already-in-use') {
+        // User exists in Firebase Auth, try to sign in to get the UID
+        try {
+          const signInCredential = await signInWithEmailAndPassword(auth, email, password);
+          user = signInCredential.user;
+          console.log('Signed in to existing Firebase Auth user:', user.uid);
+        } catch (signInError) {
+          throw new Error('Email exists in Firebase Auth but password is incorrect. Please check the password or delete the existing user in Firebase Auth console.');
+        }
+      } else {
+        throw authError;
+      }
+    }
+    
+    // Check if user profile already exists in Firestore
+    const existingProfile = await getUserProfile(user.uid);
+    if (existingProfile) {
+      console.log('User profile already exists in Firestore with role:', existingProfile.role);
+      
+      // Sign out the temp user and restore previous session if needed
+      await signOut(auth);
+      if (wasSignedIn && previousUser) {
+        // Note: We can't easily restore the previous session, user will need to login again
+      }
+      
+      return {
+        uid: user.uid,
+        email: user.email,
+        role: existingProfile.role,
+        existed: true
+      };
+    }
+    
+    // Create user profile in Firestore
+    const userProfile = {
+      uid: user.uid,
+      email: user.email,
+      role: 'super_admin',
+      mustChangePassword: false,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    
+    await addDoc(collection(db, USERS_COLLECTION_NAME), userProfile);
+    
+    // Sign out the temp user and restore previous session if needed
+    await signOut(auth);
+    if (wasSignedIn && previousUser) {
+      // Note: We can't easily restore the previous session, user will need to login again
+    }
+    
+    console.log('Super admin created successfully:', email);
+    return {
+      uid: user.uid,
+      email: user.email,
+      role: 'super_admin',
+      existed: false
+    };
+  } catch (error) {
+    console.error('Error creating super admin:', error);
+    
+    // Try to restore previous session if something went wrong
+    if (wasSignedIn && previousUser && auth.currentUser?.uid !== previousUser.uid) {
+      try {
+        await signOut(auth);
+      } catch (signOutError) {
+        console.error('Error signing out during cleanup:', signOutError);
+      }
+    }
+    
+    throw error;
   }
 }

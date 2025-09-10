@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import { usePermissions } from '@/context/PermissionContext';
 
 // Default landscape images inspired by the reference design
 const defaultImages = [
@@ -11,7 +12,8 @@ const defaultImages = [
   '/api/placeholder/400/244', // Misty hills
 ];
 
-function PersonCard({ member, onClick, isSelected = false, relationshipType = null, isHero = false }) {
+function PersonCard({ member, onClick, isSelected = false, relationshipType = null, isHero = false, onAssignAdmin = null }) {
+  const { canAssignAdmin } = usePermissions();
   const formatDate = (dateObj) => {
     if (!dateObj) return '';
     const date = dateObj.seconds ? new Date(dateObj.seconds * 1000) : new Date(dateObj);
@@ -90,6 +92,24 @@ function PersonCard({ member, onClick, isSelected = false, relationshipType = nu
             <p className="text-gray-700 leading-relaxed">{member.notes}</p>
           </div>
         )}
+
+        {/* Assign Admin Button - Hero View */}
+        {canAssignAdmin() && onAssignAdmin && (
+          <div className="px-6 pb-6">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onAssignAdmin(member);
+              }}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-airbnb-babu text-white hover:bg-teal-600 rounded-lg font-medium transition-airbnb text-sm"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+              </svg>
+              Assign Admin
+            </button>
+          </div>
+        )}
       </div>
     );
   }
@@ -154,6 +174,24 @@ function PersonCard({ member, onClick, isSelected = false, relationshipType = nu
             </span>
           )}
         </div>
+
+        {/* Assign Admin Button - Regular Card View */}
+        {canAssignAdmin() && onAssignAdmin && (
+          <div className="mt-3 pt-3 border-t border-gray-100">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onAssignAdmin(member);
+              }}
+              className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 bg-airbnb-babu text-white hover:bg-teal-600 rounded-lg font-medium transition-airbnb text-xs"
+            >
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+              </svg>
+              Assign Admin
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Hover overlay */}

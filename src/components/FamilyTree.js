@@ -223,6 +223,7 @@ const FamilyTree = forwardRef(
       setSearchB,
       onSearchA,
       onSearchPath,
+      onAssignAdmin,
     },
     ref
   ) => {
@@ -628,6 +629,7 @@ const FamilyTree = forwardRef(
                   member={currentPerson}
                   onClick={() => {}}
                   isHero={true}
+                  onAssignAdmin={onAssignAdmin}
                 />
 
                 {/* Related Members by Relationship */}
@@ -696,6 +698,7 @@ const FamilyTree = forwardRef(
                         member={member}
                         onClick={handleMemberClick}
                         isSelected={false}
+                        onAssignAdmin={onAssignAdmin}
                       />
                     ))}
                   </div>

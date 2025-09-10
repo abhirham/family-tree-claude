@@ -4,15 +4,21 @@ import { useState, useRef, useEffect } from 'react';
 import FamilyTree from '@/components/FamilyTree';
 import AddFamilyMemberForm from '@/components/AddFamilyMemberForm';
 import LoginForm from '@/components/LoginForm';
+import AssignAdminModal from '@/components/AssignAdminModal';
+import FirstLoginPasswordChange from '@/components/FirstLoginPasswordChange';
 import Modal from '@/components/Modal';
 import AutoComplete from '@/components/AutoComplete';
 import { getAllFamilyMembers } from '@/lib/firestore';
 import { useAuth } from '@/context/AuthContext';
+import { usePermissions } from '@/context/PermissionContext';
 
 export default function Home() {
   const { user, loading, logout } = useAuth();
+  const { permissions, refreshPermissions } = usePermissions();
   const [showAddForm, setShowAddForm] = useState(false);
   const [showLoginForm, setShowLoginForm] = useState(false);
+  const [showAssignAdmin, setShowAssignAdmin] = useState(false);
+  const [selectedMemberForAdmin, setSelectedMemberForAdmin] = useState(null);
   const [refreshTree, setRefreshTree] = useState(0);
   const [searchA, setSearchA] = useState('');
   const [searchB, setSearchB] = useState('');
@@ -64,6 +70,26 @@ export default function Home() {
     }
   };
 
+  const handleAssignAdmin = (member) => {
+    setSelectedMemberForAdmin(member);
+    setShowAssignAdmin(true);
+  };
+
+  const handleAssignAdminSuccess = async (result) => {
+    console.log('Branch created successfully:', result);
+    // Refresh permissions and tree data
+    await refreshPermissions();
+    setRefreshTree(prev => prev + 1);
+    // Show success message
+    // You could add a toast notification here
+  };
+
+  const handlePasswordChangeSuccess = async () => {
+    // Refresh permissions to remove mustChangePassword flag
+    await refreshPermissions();
+  };
+
+
   // Show loading spinner while checking auth state
   if (loading) {
     return (
@@ -72,6 +98,15 @@ export default function Home() {
           <div className="w-12 h-12 mx-auto mb-4 border-4 border-airbnb-rausch border-t-transparent rounded-full animate-spin"></div>
           <p className="text-gray-600">Loading...</p>
         </div>
+      </div>
+    );
+  }
+
+  // Show password change modal for new users
+  if (user && permissions.mustChangePassword) {
+    return (
+      <div className="min-h-screen bg-surface">
+        <FirstLoginPasswordChange onSuccess={handlePasswordChangeSuccess} />
       </div>
     );
   }
@@ -162,6 +197,7 @@ export default function Home() {
           setSearchB={setSearchB}
           onSearchA={handleSearchA}
           onSearchPath={handleSearchPath}
+          onAssignAdmin={handleAssignAdmin}
         />
       </main>
 
@@ -198,6 +234,17 @@ export default function Home() {
           }}
         />
       </Modal>
+
+      {/* Assign Admin Modal */}
+      <AssignAdminModal
+        isOpen={showAssignAdmin}
+        onClose={() => {
+          setShowAssignAdmin(false);
+          setSelectedMemberForAdmin(null);
+        }}
+        selectedMember={selectedMemberForAdmin}
+        onSuccess={handleAssignAdminSuccess}
+      />
     </div>
   );
 }
