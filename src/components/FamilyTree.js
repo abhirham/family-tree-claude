@@ -5,6 +5,8 @@ import { getAllFamilyMembers } from "@/lib/firestore";
 import PersonCard from "./PersonCard";
 import RelationshipSection from "./RelationshipSection";
 import AutoComplete from "./AutoComplete";
+import FamilyTreeCanvas from "./FamilyTreeCanvas";
+import UserDetailModal from "./UserDetailModal";
 
 function NavigationStack({
   stack,
@@ -234,6 +236,8 @@ const FamilyTree = forwardRef(
     const [currentPerson, setCurrentPerson] = useState(null);
     const [displayedMembers, setDisplayedMembers] = useState([]);
     const [selectedPerson, setSelectedPerson] = useState(null);
+    const [detailModalOpen, setDetailModalOpen] = useState(false);
+    const [detailModalMember, setDetailModalMember] = useState(null);
 
     useImperativeHandle(ref, () => ({
       handleSearchA: (searchTerm) => {
@@ -464,6 +468,18 @@ const FamilyTree = forwardRef(
       setDisplayedMembers(rootMembers);
     };
 
+    // Handle opening member detail modal
+    const handleOpenDetail = (member) => {
+      setDetailModalMember(member);
+      setDetailModalOpen(true);
+    };
+
+    // Handle closing detail modal
+    const handleCloseDetail = () => {
+      setDetailModalOpen(false);
+      setDetailModalMember(null);
+    };
+
     const getPrioritizedConnections = (person) => {
       const connections = [];
 
@@ -604,109 +620,24 @@ const FamilyTree = forwardRef(
 
         {/* Main Content with left margin for sidebar on large screens only */}
         <div className="flex-1 lg:ml-72 overflow-auto my-3">
-          {/* Family Tree Display */}
-          <div className=" mx-auto px-3">
-            {displayedMembers.length === 0 ? (
-              <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
-                <div className="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
-                  <span className="text-gray-400 font-semibold">TREE</span>
-                </div>
-                <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-                  Your Family Tree Awaits
-                </h2>
-                <p className="text-gray-600 text-lg mb-6">
-                  Start building your family history by adding your first family
-                  member
-                </p>
-                <div className="inline-flex items-center gap-2 text-sm text-gray-500">
-                  <span>Click "Add Family Member" above to begin</span>
-                </div>
-              </div>
-            ) : currentPerson ? (
-              <div>
-                {/* Hero Section for Selected Person */}
-                <PersonCard
-                  member={currentPerson}
-                  onClick={() => {}}
-                  isHero={true}
-                  onAssignAdmin={onAssignAdmin}
-                />
-
-                {/* Related Members by Relationship */}
-                {(() => {
-                  const relatedMembers = getRelatedMembers(currentPerson);
-                  const groups = groupRelatedMembers(relatedMembers);
-
-                  return (
-                    <div className="space-y-8">
-                      <RelationshipSection
-                        title="Spouse"
-                        members={groups.spouses}
-                        onMemberClick={handleMemberClick}
-                        currentPerson={currentPerson}
-                      />
-
-                      <RelationshipSection
-                        title="Children"
-                        members={groups.children}
-                        onMemberClick={handleMemberClick}
-                        currentPerson={currentPerson}
-                      />
-
-                      <RelationshipSection
-                        title="Step Children"
-                        members={groups.stepChildren}
-                        onMemberClick={handleMemberClick}
-                        currentPerson={currentPerson}
-                      />
-
-                      <RelationshipSection
-                        title="Parents"
-                        members={groups.parents}
-                        onMemberClick={handleMemberClick}
-                        currentPerson={currentPerson}
-                      />
-
-                      <RelationshipSection
-                        title="Siblings"
-                        members={groups.siblings}
-                        onMemberClick={handleMemberClick}
-                        currentPerson={currentPerson}
-                      />
-                    </div>
-                  );
-                })()}
-              </div>
-            ) : (
-              <div>
-                {/* Root Members Display */}
-                <div className="bg-white rounded-2xl shadow-lg p-8 mb-8">
-                  <div className="text-center mb-8">
-                    <h2 className="text-3xl font-bold text-gray-800 mb-2">
-                      Family Tree
-                    </h2>
-                    <p className="text-gray-600">
-                      Root family members - click on anyone to explore their
-                      connections
-                    </p>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {displayedMembers.map((member) => (
-                      <PersonCard
-                        key={member.id}
-                        member={member}
-                        onClick={handleMemberClick}
-                        isSelected={false}
-                        onAssignAdmin={onAssignAdmin}
-                      />
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
+          {/* Hierarchical Family Tree Display */}
+          <div className="mx-auto px-3">
+            <FamilyTreeCanvas
+              familyMembers={members}
+              onOpenDetail={handleOpenDetail}
+              className="bg-white rounded-2xl shadow-lg p-8"
+            />
           </div>
         </div>
+
+        {/* Comprehensive User Detail Modal */}
+        <UserDetailModal
+          member={detailModalMember}
+          isOpen={detailModalOpen}
+          onClose={handleCloseDetail}
+          allMembers={members}
+          onMemberClick={handleOpenDetail}
+        />
       </div>
     );
   }
