@@ -33,9 +33,9 @@ function HierarchicalTreeNode({
   const hasChildren = children.length > 0;
 
   return (
-    <div className="flex flex-col items-center">
+    <li>
       {/* Current Member Node */}
-      <div className="relative">
+      <div className="tree-node">
         <TreeNodeCard
           member={member}
           isExpanded={isExpanded}
@@ -45,66 +45,36 @@ function HierarchicalTreeNode({
           showSpouse={showSpouse && isRoot}
           spouse={spouse}
           allMembers={allMembers}
-          className="mb-6"
+          className=""
         />
-
-        {/* Connection line down to children (if expanded and has children) */}
-        {isExpanded && hasChildren && (
-          <div className="absolute left-1/2 transform -translate-x-0.5 w-0.5 h-6 bg-gray-300" 
-               style={{ top: '100%' }} />
-        )}
       </div>
 
       {/* Children Level */}
       {isExpanded && hasChildren && (
-        <div className="relative">
-          {/* Horizontal line across children */}
-          {children.length > 1 && (
-            <div 
-              className="absolute h-0.5 bg-gray-300"
-              style={{
-                top: '-12px',
-                left: '0%',
-                right: '0%',
-                width: `${(children.length - 1) * 160 + 80}px`,
-                transform: 'translateX(-50%)',
-                left: '50%'
-              }}
+        <ul>
+          {children
+            .filter(child => {
+              // Hide siblings if any sibling is expanded at this level
+              const anySiblingExpanded = children.some(c => expandedNodes.has(c.id));
+              if (anySiblingExpanded) {
+                return expandedNodes.has(child.id);
+              }
+              return true;
+            })
+            .map((child, index, filteredChildren) => (
+            <HierarchicalTreeNode
+              key={child.id}
+              member={child}
+              allMembers={allMembers}
+              expandedNodes={expandedNodes}
+              onToggleExpand={onToggleExpand}
+              onOpenDetail={onOpenDetail}
+              level={level + 1}
+              isRoot={false}
+              showSpouse={expandedNodes.has(child.id)} // Show spouse when child is expanded
             />
-          )}
-
-          {/* Children Nodes */}
-          <div className="flex gap-16 pt-6">
-            {children
-              .filter(child => {
-                // Hide siblings if any sibling is expanded at this level
-                const anySiblingExpanded = children.some(c => expandedNodes.has(c.id));
-                if (anySiblingExpanded) {
-                  return expandedNodes.has(child.id);
-                }
-                return true;
-              })
-              .map((child, index, filteredChildren) => (
-              <div key={child.id} className="relative flex flex-col items-center">
-                {/* Vertical line from horizontal line to child */}
-                <div className="absolute w-0.5 h-6 bg-gray-300" 
-                     style={{ top: '-18px', left: '50%', transform: 'translateX(-50%)' }} />
-                
-                {/* Recursive Child Node */}
-                <HierarchicalTreeNode
-                  member={child}
-                  allMembers={allMembers}
-                  expandedNodes={expandedNodes}
-                  onToggleExpand={onToggleExpand}
-                  onOpenDetail={onOpenDetail}
-                  level={level + 1}
-                  isRoot={false}
-                  showSpouse={expandedNodes.has(child.id)} // Show spouse when child is expanded
-                />
-              </div>
-            ))}
-          </div>
-        </div>
+          ))}
+        </ul>
       )}
 
       {/* Show spouse's children as step-children when this node is expanded */}
@@ -127,8 +97,8 @@ function HierarchicalTreeNode({
                   Step-children from {spouse.name}
                 </div>
                 
-                {/* Step-children display */}
-                <div className="flex gap-16">
+                {/* Step-children as separate ul */}
+                <ul>
                   {spouseChildren.map((stepChild) => (
                     <HierarchicalTreeNode
                       key={stepChild.id}
@@ -142,13 +112,13 @@ function HierarchicalTreeNode({
                       showSpouse={false}
                     />
                   ))}
-                </div>
+                </ul>
               </div>
             );
           })()}
         </div>
       )}
-    </div>
+    </li>
   );
 }
 

@@ -96,73 +96,47 @@ function FamilyTreeCanvas({
       {/* Tree Canvas with Gradient Background */}
       <div className="relative overflow-x-auto overflow-y-visible">
         <div className="min-w-full py-8 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 rounded-2xl">
-          {displayMode === 'single-root' ? (
-            // Single root: show with spouse if they have one
-            <div className="flex justify-center">
-              <HierarchicalTreeNode
-                member={rootMembers[0]}
-                allMembers={familyMembers}
-                expandedNodes={expandedNodes}
-                onToggleExpand={handleToggleExpand}
-                onOpenDetail={onOpenDetail}
-                level={0}
-                isRoot={true}
-                showSpouse={true}
-              />
-            </div>
-          ) : (
-            // Multiple roots: show all roots as siblings side by side
-            <div>
-              
-              {/* Show root members side by side as siblings */}
-              <div className="relative">
-                {/* Horizontal line connecting root siblings */}
-                {rootMembers.length > 1 && (
-                  <div 
-                    className="absolute h-0.5 bg-gray-300"
-                    style={{
-                      top: '40px', // Position above the names
-                      left: '50%',
-                      width: `${(rootMembers.length - 1) * 200 + 80}px`,
-                      transform: 'translateX(-50%)'
-                    }}
-                  />
-                )}
-                
-                <div className="flex justify-center gap-32">
-                  {rootMembers
-                    .filter(rootMember => {
-                      // Hide siblings if any sibling is expanded
-                      const anyRootExpanded = rootMembers.some(rm => expandedNodes.has(rm.id));
-                      if (anyRootExpanded) {
-                        return expandedNodes.has(rootMember.id);
-                      }
-                      return true;
-                    })
-                    .map((rootMember, index, filteredRoots) => (
-                    <div key={rootMember.id} className="relative">
-                      {/* Vertical line from horizontal line to each root */}
-                      {filteredRoots.length > 1 && (
-                        <div className="absolute w-0.5 h-6 bg-gray-300" 
-                             style={{ top: '34px', left: '50%', transform: 'translateX(-50%)' }} />
-                      )}
-                      
-                      <HierarchicalTreeNode
-                        member={rootMember}
-                        allMembers={familyMembers}
-                        expandedNodes={expandedNodes}
-                        onToggleExpand={handleToggleExpand}
-                        onOpenDetail={onOpenDetail}
-                        level={0}
-                        isRoot={true}
-                        showSpouse={expandedNodes.has(rootMember.id)} // Show spouse when this root is expanded
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
+          <div className="tree flex justify-center">
+            <ul>
+              {displayMode === 'single-root' ? (
+                // Single root: show with spouse if they have one
+                <HierarchicalTreeNode
+                  member={rootMembers[0]}
+                  allMembers={familyMembers}
+                  expandedNodes={expandedNodes}
+                  onToggleExpand={handleToggleExpand}
+                  onOpenDetail={onOpenDetail}
+                  level={0}
+                  isRoot={true}
+                  showSpouse={true}
+                />
+              ) : (
+                // Multiple roots: show all roots as siblings
+                rootMembers
+                  .filter(rootMember => {
+                    // Hide siblings if any sibling is expanded
+                    const anyRootExpanded = rootMembers.some(rm => expandedNodes.has(rm.id));
+                    if (anyRootExpanded) {
+                      return expandedNodes.has(rootMember.id);
+                    }
+                    return true;
+                  })
+                  .map((rootMember) => (
+                    <HierarchicalTreeNode
+                      key={rootMember.id}
+                      member={rootMember}
+                      allMembers={familyMembers}
+                      expandedNodes={expandedNodes}
+                      onToggleExpand={handleToggleExpand}
+                      onOpenDetail={onOpenDetail}
+                      level={0}
+                      isRoot={true}
+                      showSpouse={expandedNodes.has(rootMember.id)} // Show spouse when this root is expanded
+                    />
+                  ))
+              )}
+            </ul>
+          </div>
         </div>
       </div>
 

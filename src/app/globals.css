@@ -47,3 +47,90 @@ body {
 .transition-airbnb {
   transition: all 0.2s ease-out;
 }
+
+/* Family Tree Connector Lines - CSS-based implementation */
+.tree ul {
+  padding-top: 20px; 
+  position: relative;
+  display: flex;
+  justify-content: center;
+  transition: all 0.5s;
+  -webkit-transition: all 0.5s;
+  -moz-transition: all 0.5s;
+}
+
+.tree li {
+  display: inline-block;
+  text-align: center;
+  list-style-type: none;
+  position: relative;
+  padding: 20px 5px 0 5px;
+  transition: all 0.5s;
+  -webkit-transition: all 0.5s;
+  -moz-transition: all 0.5s;
+}
+
+/* Use ::before and ::after to draw the connectors */
+.tree li::before, .tree li::after {
+  content: '';
+  position: absolute; 
+  top: 0; 
+  right: 50%;
+  border-top: 1px solid #ccc;
+  width: 50%; 
+  height: 20px;
+}
+
+.tree li::after {
+  right: auto; 
+  left: 50%;
+  border-left: 1px solid #ccc;
+}
+
+/* Remove left-right connectors from elements without any siblings */
+.tree li:only-child::after, .tree li:only-child::before {
+  display: none;
+}
+
+/* Remove space from the top of single children */
+.tree li:only-child { 
+  padding-top: 0;
+}
+
+/* Remove left connector from first child and right connector from last child */
+.tree li:first-child::before, .tree li:last-child::after {
+  border: 0 none;
+}
+
+/* Adding back the vertical connector to the last nodes */
+.tree li:last-child::before {
+  border-right: 1px solid #ccc;
+  border-radius: 0 5px 0 0;
+  -webkit-border-radius: 0 5px 0 0;
+  -moz-border-radius: 0 5px 0 0;
+}
+
+.tree li:first-child::after {
+  border-radius: 5px 0 0 0;
+  -webkit-border-radius: 5px 0 0 0;
+  -moz-border-radius: 5px 0 0 0;
+}
+
+/* Add downward connectors from parents */
+.tree ul ul::before {
+  content: '';
+  position: absolute; 
+  top: 0; 
+  left: 50%;
+  border-left: 1px solid #ccc;
+  width: 0; 
+  height: 20px;
+}
+
+/* Connector styles on hover - make lines more visible */
+.tree-node:hover + .tree ul li::after, 
+.tree-node:hover + .tree ul li::before, 
+.tree-node:hover + .tree ul::before, 
+.tree-node:hover + .tree ul ul::before {
+  border-color: #94a0b4;
+}
