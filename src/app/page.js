@@ -7,7 +7,6 @@ import LoginForm from '@/components/LoginForm';
 import AssignAdminModal from '@/components/AssignAdminModal';
 import FirstLoginPasswordChange from '@/components/FirstLoginPasswordChange';
 import Modal from '@/components/Modal';
-import AutoComplete from '@/components/AutoComplete';
 import { getAllFamilyMembers } from '@/lib/firestore';
 import { useAuth } from '@/context/AuthContext';
 import { usePermissions } from '@/context/PermissionContext';
