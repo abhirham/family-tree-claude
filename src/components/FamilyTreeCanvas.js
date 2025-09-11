@@ -14,6 +14,7 @@ function FamilyTreeCanvas({
   setSearchB,
   onSearchA,
   onSearchPath,
+  onNavigateToMember,
   selectedPerson,
   setSelectedPerson
 }) {
@@ -25,12 +26,13 @@ function FamilyTreeCanvas({
     return familyMembers.filter(member => member.root === true);
   }, [familyMembers]);
 
-  // Determine display mode based on number of root members
+  // Determine display mode based on number of root members and selected person
   const displayMode = useMemo(() => {
     if (rootMembers.length === 0) return 'empty';
+    if (selectedPerson) return 'selected-person'; // Show selected person prominently
     if (rootMembers.length === 1) return 'single-root';
     return 'multiple-roots';
-  }, [rootMembers.length]);
+  }, [rootMembers.length, selectedPerson]);
 
   // Handle node expansion/collapse
   const handleToggleExpand = (nodeId) => {
@@ -103,10 +105,20 @@ function FamilyTreeCanvas({
                   value={searchA || ""}
                   onChange={setSearchA}
                   onSelect={(value, member) => {
-                    setSearchA(value);
+                    setSearchA(member.name);
                     setSelectedPerson(member);
-                    if (member && onSearchA) {
-                      setTimeout(() => onSearchA(value), 100);
+                    if (member) {
+                      // Expand the selected member to show their relationships
+                      setExpandedNodes(prev => {
+                        const newSet = new Set(prev);
+                        newSet.add(member.id);
+                        return newSet;
+                      });
+                      
+                      if (onNavigateToMember) {
+                        // Navigate directly to the member using the new method
+                        setTimeout(() => onNavigateToMember(member), 100);
+                      }
                     }
                   }}
                   placeholder="Search family members..."
@@ -118,6 +130,7 @@ function FamilyTreeCanvas({
                     setSearchA("");
                     setSearchB("");
                     setSelectedPerson(null);
+                    setExpandedNodes(new Set()); // Clear all expansions when clearing search
                   }}
                   renderOption={(member, isHighlighted) => (
                     <div
@@ -221,7 +234,19 @@ function FamilyTreeCanvas({
         <div className="min-w-full py-8 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 rounded-2xl">
           <div className="tree flex justify-center">
             <ul>
-              {displayMode === 'single-root' ? (
+              {displayMode === 'selected-person' ? (
+                // Selected person from search: show them prominently with their relationships
+                <HierarchicalTreeNode
+                  member={selectedPerson}
+                  allMembers={familyMembers}
+                  expandedNodes={expandedNodes}
+                  onToggleExpand={handleToggleExpand}
+                  onOpenDetail={onOpenDetail}
+                  level={0}
+                  isRoot={false}
+                  showSpouse={true} // Always show spouse for selected person
+                />
+              ) : displayMode === 'single-root' ? (
                 // Single root: show with spouse if they have one
                 <HierarchicalTreeNode
                   member={rootMembers[0]}

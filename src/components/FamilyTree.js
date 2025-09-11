@@ -19,6 +19,7 @@ const FamilyTree = forwardRef(
       setSearchB,
       onSearchA,
       onSearchPath,
+      onNavigateToMember,
       onAssignAdmin,
     },
     ref
@@ -42,10 +43,18 @@ const FamilyTree = forwardRef(
         );
 
         if (foundMember) {
+          // Clear navigation stack and navigate to the found member
           setNavigationStack([]);
           handleMemberClick(foundMember);
         } else {
           alert("Person not found");
+        }
+      },
+      navigateToMember: (member) => {
+        if (member) {
+          // Clear navigation stack and navigate to the member
+          setNavigationStack([]);
+          handleMemberClick(member);
         }
       },
       handleSearchPath: (searchTermA, searchTermB) => {
@@ -405,6 +414,7 @@ const FamilyTree = forwardRef(
               setSearchB={setSearchB}
               onSearchA={onSearchA}
               onSearchPath={onSearchPath}
+              onNavigateToMember={onNavigateToMember}
               selectedPerson={selectedPerson}
               setSelectedPerson={setSelectedPerson}
             />

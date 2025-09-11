@@ -58,6 +58,12 @@ export default function Home() {
     }
   };
 
+  const handleNavigateToMember = (member) => {
+    if (familyTreeRef.current && familyTreeRef.current.navigateToMember) {
+      familyTreeRef.current.navigateToMember(member);
+    }
+  };
+
   const handleSearchPath = (searchValueA = searchA, searchValueB = searchB) => {
     if (familyTreeRef.current && familyTreeRef.current.handleSearchPath) {
       // Convert IDs to names if needed
@@ -196,6 +202,7 @@ export default function Home() {
           setSearchB={setSearchB}
           onSearchA={handleSearchA}
           onSearchPath={handleSearchPath}
+          onNavigateToMember={handleNavigateToMember}
           onAssignAdmin={handleAssignAdmin}
         />
       </main>
