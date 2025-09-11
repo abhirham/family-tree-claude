@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import { usePermissions } from '@/context/PermissionContext';
+import HumanAvatar from './HumanAvatar';
 
 // Default landscape images inspired by the reference design
 const defaultImages = [
@@ -36,6 +37,12 @@ function PersonCard({ member, onClick, isSelected = false, relationshipType = nu
     return '';
   };
 
+  // Get a consistent seed for avatar generation based on member ID
+  const getAvatarSeed = () => {
+    if (!member.id) return 0;
+    return member.id.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
+  };
+
   // Get a consistent default image based on member ID
   const getDefaultImage = () => {
     if (!member.id) return defaultImages[0];
@@ -67,22 +74,34 @@ function PersonCard({ member, onClick, isSelected = false, relationshipType = nu
     return (
       <div className="bg-white shadow-airbnb rounded-lg overflow-hidden mb-8 border border-gray-200">
         <div className="relative h-64">
-          <Image
-            src={member.imageUrl || getDefaultImage()}
-            alt={member.name}
-            fill
-            className="object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
-          <div className="absolute bottom-6 left-6 text-white">
+          {member.imageUrl ? (
+            <>
+              <Image
+                src={member.imageUrl}
+                alt={member.name}
+                fill
+                className="object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+            </>
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
+              <HumanAvatar 
+                gender={member.gender || 'male'} 
+                size={120} 
+                seed={getAvatarSeed()} 
+              />
+            </div>
+          )}
+          <div className={`absolute bottom-6 left-6 ${member.imageUrl ? 'text-white' : 'text-gray-800'}`}>
             <h1 className="text-3xl font-semibold mb-2">{member.name}</h1>
             {formatDateRange(member.birthDate, member.deathDate) && (
-              <p className="text-lg opacity-90">
+              <p className={`text-lg ${member.imageUrl ? 'opacity-90' : 'opacity-75'}`}>
                 {formatDateRange(member.birthDate, member.deathDate)}
               </p>
             )}
             {member.gender && (
-              <p className="text-sm opacity-75 capitalize mt-1">{member.gender}</p>
+              <p className={`text-sm ${member.imageUrl ? 'opacity-75' : 'opacity-60'} capitalize mt-1`}>{member.gender}</p>
             )}
           </div>
         </div>
@@ -130,13 +149,25 @@ function PersonCard({ member, onClick, isSelected = false, relationshipType = nu
 
       {/* Image Section */}
       <div className="relative h-40">
-        <Image
-          src={member.imageUrl || getDefaultImage()}
-          alt={member.name}
-          fill
-          className="object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
+        {member.imageUrl ? (
+          <>
+            <Image
+              src={member.imageUrl}
+              alt={member.name}
+              fill
+              className="object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
+          </>
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+            <HumanAvatar 
+              gender={member.gender || 'male'} 
+              size={80} 
+              seed={getAvatarSeed()} 
+            />
+          </div>
+        )}
       </div>
 
       {/* Content Section */}

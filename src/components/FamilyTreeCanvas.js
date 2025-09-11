@@ -2,11 +2,20 @@
 
 import { useState, useMemo } from 'react';
 import HierarchicalTreeNode from './HierarchicalTreeNode';
+import AutoComplete from './AutoComplete';
 
 function FamilyTreeCanvas({
   familyMembers,
   onOpenDetail,
-  className = ""
+  className = "",
+  searchA,
+  setSearchA,
+  searchB,
+  setSearchB,
+  onSearchA,
+  onSearchPath,
+  selectedPerson,
+  setSelectedPerson
 }) {
   // State for tracking expanded nodes
   const [expandedNodes, setExpandedNodes] = useState(new Set());
@@ -73,7 +82,7 @@ function FamilyTreeCanvas({
     <div className={`w-full ${className}`}>
       {/* Tree Controls */}
       <div className="flex justify-between items-center mb-8 px-4">
-        <div>
+        <div className="flex-1">
           <h2 className="text-2xl font-semibold text-gray-800">Family Tree</h2>
           <p className="text-gray-600 text-sm">
             {displayMode === 'single-root' 
@@ -82,15 +91,129 @@ function FamilyTreeCanvas({
             }
           </p>
         </div>
-        
-        {expandedNodes.size > 0 && (
-          <button
-            onClick={handleResetTree}
-            className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-airbnb text-sm font-medium"
-          >
-            Collapse All
-          </button>
-        )}
+
+        {/* Search Controls */}
+        <div className="flex items-center gap-4">
+          <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+            <div className="flex items-center gap-3">
+              {/* Primary Search */}
+              <div className="min-w-64">
+                <AutoComplete
+                  options={familyMembers || []}
+                  value={searchA || ""}
+                  onChange={setSearchA}
+                  onSelect={(value, member) => {
+                    setSearchA(value);
+                    setSelectedPerson(member);
+                    if (member && onSearchA) {
+                      setTimeout(() => onSearchA(value), 100);
+                    }
+                  }}
+                  placeholder="Search family members..."
+                  displayKey="name"
+                  valueKey="id"
+                  className="text-sm"
+                  clearable={true}
+                  onClear={() => {
+                    setSearchA("");
+                    setSearchB("");
+                    setSelectedPerson(null);
+                  }}
+                  renderOption={(member, isHighlighted) => (
+                    <div
+                      className={`flex items-center gap-2 text-sm ${
+                        isHighlighted ? "text-airbnb-rausch" : "text-gray-900"
+                      }`}
+                    >
+                      <span
+                        className={`text-xs font-medium ${
+                          member.root ? "text-airbnb-rausch" : "text-gray-500"
+                        }`}
+                      >
+                        {member.root ? "ROOT" : "MEMBER"}
+                      </span>
+                      <span>{member.name}</span>
+                      {member.birthDate && (
+                        <span className="text-xs text-gray-500 ml-auto">
+                          {new Date(member.birthDate.seconds * 1000).getFullYear()}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                />
+              </div>
+
+              {/* Path Finding - Show only when person is selected */}
+              {selectedPerson && (
+                <>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-600">Find path to:</span>
+                  </div>
+                  <div className="min-w-64">
+                    <AutoComplete
+                      options={
+                        familyMembers?.filter((m) => m.id !== selectedPerson.id) ||
+                        []
+                      }
+                      value={searchB || ""}
+                      onChange={setSearchB}
+                      onSelect={(value, member) => {
+                        setSearchB(value);
+                      }}
+                      placeholder="Select destination person..."
+                      displayKey="name"
+                      valueKey="id"
+                      className="text-sm"
+                      clearable={true}
+                      onClear={() => {
+                        setSearchB("");
+                      }}
+                      renderOption={(member, isHighlighted) => (
+                        <div
+                          className={`flex items-center gap-2 text-sm ${
+                            isHighlighted ? "text-airbnb-babu" : "text-gray-900"
+                          }`}
+                        >
+                          <span
+                            className={`text-xs font-medium ${
+                              member.root ? "text-airbnb-babu" : "text-gray-500"
+                            }`}
+                          >
+                            {member.root ? "ROOT" : "MEMBER"}
+                          </span>
+                          <span>{member.name}</span>
+                          {member.birthDate && (
+                            <span className="text-xs text-gray-500 ml-auto">
+                              {new Date(
+                                member.birthDate.seconds * 1000
+                              ).getFullYear()}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    />
+                  </div>
+                  <button
+                    onClick={() => onSearchPath()}
+                    disabled={!searchB}
+                    className="px-4 py-2 bg-airbnb-babu text-white rounded-lg hover:bg-teal-600 transition-airbnb font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Find Path
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+          
+          {expandedNodes.size > 0 && (
+            <button
+              onClick={handleResetTree}
+              className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-airbnb text-sm font-medium"
+            >
+              Collapse All
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Tree Canvas with Gradient Background */}

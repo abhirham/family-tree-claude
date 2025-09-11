@@ -277,28 +277,6 @@ function UserDetailModal({ member, isOpen, onClose, allMembers = [], onMemberCli
               </div>
             )}
 
-            {/* Additional Information */}
-            <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-              <h3 className="font-semibold text-blue-800 mb-2">Additional Information</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="font-medium text-blue-700">Member ID:</span>
-                  <span className="text-blue-600 ml-2 font-mono">{member.id.slice(0, 8)}...</span>
-                </div>
-                {member.createdAt && (
-                  <div>
-                    <span className="font-medium text-blue-700">Added:</span>
-                    <span className="text-blue-600 ml-2">{formatDate(member.createdAt)}</span>
-                  </div>
-                )}
-                {member.updatedAt && (
-                  <div>
-                    <span className="font-medium text-blue-700">Last Updated:</span>
-                    <span className="text-blue-600 ml-2">{formatDate(member.updatedAt)}</span>
-                  </div>
-                )}
-              </div>
-            </div>
           </div>
         </div>
       </div>

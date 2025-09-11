@@ -8,212 +8,6 @@ import AutoComplete from "./AutoComplete";
 import FamilyTreeCanvas from "./FamilyTreeCanvas";
 import UserDetailModal from "./UserDetailModal";
 
-function NavigationStack({
-  stack,
-  onNavigateToMember,
-  onClearStack,
-  familyMembers,
-  searchA,
-  setSearchA,
-  searchB,
-  setSearchB,
-  onSearchA,
-  onSearchPath,
-  selectedPerson,
-  setSelectedPerson,
-}) {
-  const handlePersonSelect = (value, member) => {
-    setSearchA(value);
-    setSelectedPerson(member);
-    // Auto-trigger search when person is selected
-    if (member && onSearchA) {
-      setTimeout(() => onSearchA(value), 100);
-    }
-  };
-
-  const handleClearSearch = () => {
-    setSearchA("");
-    setSearchB("");
-    setSelectedPerson(null);
-  };
-
-  return (
-    <div className="w-72 bg-white border-r border-gray-200 px-6 pb-6 h-full overflow-y-auto">
-      <div className="flex items-center justify-between mb-6 pt-6">
-        <div className="flex items-center">
-          <h3 className="font-semibold text-gray-800">Navigation</h3>
-        </div>
-        {stack.length > 0 && (
-          <button
-            onClick={() => {
-              handleClearSearch();
-              onClearStack();
-            }}
-            className="text-sm text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 px-3 py-1 rounded-full transition-colors"
-          >
-            Reset
-          </button>
-        )}
-      </div>
-
-      {/* Compact Search Section */}
-      <div className="bg-gray-50 rounded-lg p-4 mb-6 border border-gray-200">
-        <h4 className="text-sm font-semibold text-gray-700 mb-3">Search</h4>
-
-        <div className="space-y-3">
-          {/* Primary Search */}
-          <div>
-            <AutoComplete
-              options={familyMembers || []}
-              value={searchA}
-              onChange={setSearchA}
-              onSelect={handlePersonSelect}
-              placeholder="Search family members..."
-              displayKey="name"
-              valueKey="id"
-              className="text-sm"
-              clearable={true}
-              onClear={handleClearSearch}
-              renderOption={(member, isHighlighted) => (
-                <div
-                  className={`flex items-center gap-2 text-sm ${
-                    isHighlighted ? "text-airbnb-rausch" : "text-gray-900"
-                  }`}
-                >
-                  <span
-                    className={`text-xs font-medium ${
-                      member.root ? "text-airbnb-rausch" : "text-gray-500"
-                    }`}
-                  >
-                    {member.root ? "ROOT" : "MEMBER"}
-                  </span>
-                  <span>{member.name}</span>
-                  {member.birthDate && (
-                    <span className="text-xs text-gray-500 ml-auto">
-                      {new Date(member.birthDate.seconds * 1000).getFullYear()}
-                    </span>
-                  )}
-                </div>
-              )}
-            />
-          </div>
-
-          {/* Progressive: Show Path Finding only after person is selected */}
-          {selectedPerson && (
-            <div className="pt-3 border-t border-gray-200">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-xs text-gray-600">Find path from</span>
-                <span className="text-xs font-medium text-airbnb-rausch bg-red-50 px-2 py-1 rounded">
-                  {selectedPerson.name}
-                </span>
-                <span className="text-xs text-gray-600">to:</span>
-              </div>
-              <div className="space-y-2">
-                <AutoComplete
-                  options={
-                    familyMembers?.filter((m) => m.id !== selectedPerson.id) ||
-                    []
-                  }
-                  value={searchB}
-                  onChange={setSearchB}
-                  onSelect={(value, member) => {
-                    setSearchB(value);
-                  }}
-                  placeholder="Select destination person..."
-                  displayKey="name"
-                  valueKey="id"
-                  className="text-sm"
-                  clearable={true}
-                  onClear={() => {
-                    setSearchB("");
-                  }}
-                  renderOption={(member, isHighlighted) => (
-                    <div
-                      className={`flex items-center gap-2 text-sm ${
-                        isHighlighted ? "text-airbnb-babu" : "text-gray-900"
-                      }`}
-                    >
-                      <span
-                        className={`text-xs font-medium ${
-                          member.root ? "text-airbnb-babu" : "text-gray-500"
-                        }`}
-                      >
-                        {member.root ? "ROOT" : "MEMBER"}
-                      </span>
-                      <span>{member.name}</span>
-                      {member.birthDate && (
-                        <span className="text-xs text-gray-500 ml-auto">
-                          {new Date(
-                            member.birthDate.seconds * 1000
-                          ).getFullYear()}
-                        </span>
-                      )}
-                    </div>
-                  )}
-                />
-                <button
-                  onClick={() => onSearchPath()}
-                  disabled={!searchB}
-                  className="w-full px-3 py-2 bg-airbnb-babu text-white rounded-lg hover:bg-teal-600 transition-airbnb font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Find Path
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {stack.length === 0 ? (
-        <div className="text-center py-8">
-          <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-            <span className="text-gray-400 font-medium text-sm">TREE</span>
-          </div>
-          <p className="text-sm text-gray-500 leading-relaxed">
-            Click on family members to explore connections and build your
-            navigation history
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          <h4 className="text-sm font-medium text-gray-700 uppercase tracking-wide">
-            Navigation History
-          </h4>
-          {stack.map((member, index) => (
-            <div
-              key={`${member.id}-${index}`}
-              className={`flex items-center space-x-3 p-3 rounded-lg cursor-pointer transition-all ${
-                index === stack.length - 1
-                  ? "bg-blue-50 border border-blue-200"
-                  : "bg-gray-50 hover:bg-gray-100 border border-transparent"
-              }`}
-              onClick={() => onNavigateToMember(member, index)}
-            >
-              <div className="w-10 h-10 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden">
-                {member.imageUrl ? (
-                  <PersonCard member={member} onClick={() => {}} />
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-blue-400 to-purple-500"></div>
-                )}
-              </div>
-              <div className="flex-1 min-w-0">
-                <span className="text-sm font-medium text-gray-800 truncate block">
-                  {member.name}
-                </span>
-                <span className="text-xs text-gray-500">Step {index + 1}</span>
-              </div>
-              {index === stack.length - 1 && (
-                <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded-full">
-                  Current
-                </span>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
 
 const FamilyTree = forwardRef(
   (
@@ -597,35 +391,22 @@ const FamilyTree = forwardRef(
 
     return (
       <div className="flex min-h-screen">
-        {/* Left Sidebar - Navigation Stack - Hidden on mobile/tablet */}
-        <div
-          className="hidden lg:block fixed left-0 w-72 z-40"
-          style={{ top: "74px", height: "calc(100vh - 74px)" }}
-        >
-          <NavigationStack
-            stack={navigationStack}
-            onNavigateToMember={handleNavigateFromStack}
-            onClearStack={handleClearStack}
-            familyMembers={familyMembers}
-            searchA={searchA}
-            setSearchA={setSearchA}
-            searchB={searchB}
-            setSearchB={setSearchB}
-            onSearchA={onSearchA}
-            onSearchPath={onSearchPath}
-            selectedPerson={selectedPerson}
-            setSelectedPerson={setSelectedPerson}
-          />
-        </div>
-
-        {/* Main Content with left margin for sidebar on large screens only */}
-        <div className="flex-1 lg:ml-72 overflow-auto my-3">
+        {/* Main Content - Full Width */}
+        <div className="flex-1 overflow-auto my-3">
           {/* Hierarchical Family Tree Display */}
           <div className="mx-auto px-3">
             <FamilyTreeCanvas
               familyMembers={members}
               onOpenDetail={handleOpenDetail}
               className="bg-white rounded-2xl shadow-lg p-8"
+              searchA={searchA}
+              setSearchA={setSearchA}
+              searchB={searchB}
+              setSearchB={setSearchB}
+              onSearchA={onSearchA}
+              onSearchPath={onSearchPath}
+              selectedPerson={selectedPerson}
+              setSelectedPerson={setSelectedPerson}
             />
           </div>
         </div>
