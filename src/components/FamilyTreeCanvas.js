@@ -34,13 +34,56 @@ function FamilyTreeCanvas({
     return 'multiple-roots';
   }, [rootMembers.length, selectedPerson]);
 
+  // Get all descendants of a node recursively
+  const getAllDescendants = (nodeId, visited = new Set()) => {
+    if (visited.has(nodeId)) return new Set(); // Prevent circular references
+    visited.add(nodeId);
+    
+    const descendants = new Set();
+    
+    // Find all children of this node
+    const children = familyMembers.filter(person => 
+      person.parentIds && person.parentIds.includes(nodeId)
+    );
+    
+    children.forEach(child => {
+      descendants.add(child.id);
+      // Recursively get descendants of this child
+      const childDescendants = getAllDescendants(child.id, visited);
+      childDescendants.forEach(descendantId => descendants.add(descendantId));
+    });
+    
+    // Also include spouse's children (step-children) if this node has a spouse
+    const member = familyMembers.find(m => m.id === nodeId);
+    if (member && member.spouseId) {
+      const spouseChildren = familyMembers.filter(person => 
+        person.parentIds && 
+        person.parentIds.includes(member.spouseId) &&
+        (!person.parentIds.includes(nodeId)) // Not already a child of this member
+      );
+      
+      spouseChildren.forEach(stepChild => {
+        descendants.add(stepChild.id);
+        // Recursively get descendants of this step-child
+        const stepChildDescendants = getAllDescendants(stepChild.id, visited);
+        stepChildDescendants.forEach(descendantId => descendants.add(descendantId));
+      });
+    }
+    
+    return descendants;
+  };
+
   // Handle node expansion/collapse
   const handleToggleExpand = (nodeId) => {
     setExpandedNodes(prev => {
       const newSet = new Set(prev);
       if (newSet.has(nodeId)) {
+        // Collapsing: remove this node and ALL its descendants
         newSet.delete(nodeId);
+        const descendants = getAllDescendants(nodeId);
+        descendants.forEach(descendantId => newSet.delete(descendantId));
       } else {
+        // Expanding: just add this node
         newSet.add(nodeId);
       }
       return newSet;
