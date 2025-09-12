@@ -12,6 +12,7 @@ import {
 } from 'firebase/firestore';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { db, auth } from './firebase';
+import { deleteImage, deleteImages } from './imageUpload';
 
 const COLLECTION_NAME = 'familyMembers';
 const USERS_COLLECTION_NAME = 'users';
@@ -362,7 +363,7 @@ export async function updateFamilyMember(id, updates) {
   }
 }
 
-// Delete a family member
+// Delete a family member and associated images
 export async function deleteFamilyMember(id) {
   // Check if user is authenticated
   if (!auth.currentUser) {
@@ -370,11 +371,71 @@ export async function deleteFamilyMember(id) {
   }
   
   try {
+    // First get the member data to find associated images
+    const member = await getFamilyMember(id);
+    
+    // Collect image paths to delete
+    const imagesToDelete = [];
+    
+    // Add profile image path if it's a Firebase Storage URL
+    if (member.imageUrl && member.imageUrl.includes('firebase')) {
+      try {
+        const profilePath = extractStoragePathFromUrl(member.imageUrl);
+        if (profilePath) imagesToDelete.push(profilePath);
+      } catch (e) {
+        console.warn('Could not extract profile image path:', e);
+      }
+    }
+    
+    // Add gallery image paths
+    if (member.galleryImages && Array.isArray(member.galleryImages)) {
+      member.galleryImages.forEach(galleryImage => {
+        if (galleryImage.path) {
+          imagesToDelete.push(galleryImage.path);
+        } else if (galleryImage.url && galleryImage.url.includes('firebase')) {
+          try {
+            const galleryPath = extractStoragePathFromUrl(galleryImage.url);
+            if (galleryPath) imagesToDelete.push(galleryPath);
+          } catch (e) {
+            console.warn('Could not extract gallery image path:', e);
+          }
+        }
+      });
+    }
+    
+    // Delete the member document
     const docRef = doc(db, COLLECTION_NAME, id);
     await deleteDoc(docRef);
+    
+    // Delete associated images (don't fail if image deletion fails)
+    if (imagesToDelete.length > 0) {
+      try {
+        await deleteImages(imagesToDelete);
+        console.log('Successfully deleted images for member:', id);
+      } catch (imageError) {
+        console.warn('Warning: Could not delete some images for member', id, ':', imageError);
+        // Don't throw error - member deletion succeeded
+      }
+    }
+    
   } catch (error) {
     console.error('Error deleting family member:', error);
     throw error;
+  }
+}
+
+// Helper function to extract storage path from Firebase Storage URL
+function extractStoragePathFromUrl(url) {
+  try {
+    // Firebase Storage URLs have format: https://firebasestorage.googleapis.com/v0/b/bucket/o/path?alt=media&token=...
+    const matches = url.match(/\/o\/([^?]+)/);
+    if (matches) {
+      return decodeURIComponent(matches[1]);
+    }
+    return null;
+  } catch (error) {
+    console.warn('Error extracting storage path from URL:', error);
+    return null;
   }
 }
 

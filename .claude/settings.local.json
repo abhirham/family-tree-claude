@@ -24,7 +24,10 @@
       "WebSearch",
       "WebFetch(domain:www.w3.org)",
       "WebFetch(domain:ux.stackexchange.com)",
-      "WebFetch(domain:medium.com)"
+      "WebFetch(domain:medium.com)",
+      "mcp__playwright__browser_console_messages",
+      "Bash(dir:*)",
+      "mcp__playwright__browser_file_upload"
     ],
     "deny": [],
     "ask": []

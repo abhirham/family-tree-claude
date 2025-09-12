@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { addFamilyMemberWithRelationships, getAllFamilyMembers, testRelationshipFlow } from '@/lib/firestore';
+import { uploadProfileImage, uploadGalleryImages, validateImageFile, validateImageFiles, createImagePreview } from '@/lib/imageUpload';
 import AutoComplete from './AutoComplete';
 
 export default function AddFamilyMemberForm({ onMemberAdded }) {
@@ -16,9 +17,12 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
     linkedMemberId: '',
     relationshipType: ''
   });
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
+  const [selectedProfileFile, setSelectedProfileFile] = useState(null);
+  const [profileImagePreview, setProfileImagePreview] = useState(null);
+  const [selectedGalleryFiles, setSelectedGalleryFiles] = useState([]);
+  const [galleryImagePreviews, setGalleryImagePreviews] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState({ profile: 0, gallery: 0 });
   const [error, setError] = useState(null);
   const [existingMembers, setExistingMembers] = useState([]);
   const [isFirstUser, setIsFirstUser] = useState(false);
@@ -94,13 +98,40 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
     }
 
     try {
+      // Create temporary member ID for file uploads
+      const tempMemberId = 'temp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+      
+      let profileImageUrl = formData.imageUrl || '';
+      let galleryImageUrls = [];
+      
+      // Upload profile image if selected
+      if (selectedProfileFile) {
+        setUploadProgress(prev => ({ ...prev, profile: 10 }));
+        console.log('📸 Uploading profile image...');
+        const profileResult = await uploadProfileImage(selectedProfileFile, tempMemberId);
+        profileImageUrl = profileResult.url;
+        setUploadProgress(prev => ({ ...prev, profile: 100 }));
+        console.log('✅ Profile image uploaded:', profileResult.url);
+      }
+      
+      // Upload gallery images if selected
+      if (selectedGalleryFiles.length > 0) {
+        setUploadProgress(prev => ({ ...prev, gallery: 10 }));
+        console.log('📸 Uploading gallery images...');
+        const galleryResults = await uploadGalleryImages(selectedGalleryFiles, tempMemberId);
+        galleryImageUrls = galleryResults;
+        setUploadProgress(prev => ({ ...prev, gallery: 100 }));
+        console.log('✅ Gallery images uploaded:', galleryResults.length, 'images');
+      }
+      
       const memberData = {
         ...formData,
         birthDate: formData.birthDate ? new Date(formData.birthDate) : null,
         deathDate: formData.deathDate ? new Date(formData.deathDate) : null,
         linkedMemberId: formData.linkedMemberId.trim() || null,
         relationshipType: formData.relationshipType.trim() || null,
-        imageUrl: imagePreview || formData.imageUrl || '', // Use uploaded image or fallback to URL if provided
+        imageUrl: profileImageUrl,
+        galleryImages: galleryImageUrls,
       };
 
       console.log('🔍 Debug: Submitting member data:', memberData);
@@ -133,11 +164,18 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
         linkedMemberId: '',
         relationshipType: ''
       });
-      setSelectedFile(null);
-      setImagePreview(null);
-      const fileInput = document.getElementById('imageFile');
-      if (fileInput) {
-        fileInput.value = '';
+      setSelectedProfileFile(null);
+      setProfileImagePreview(null);
+      setSelectedGalleryFiles([]);
+      setGalleryImagePreviews([]);
+      setUploadProgress({ profile: 0, gallery: 0 });
+      const profileInput = document.getElementById('profileImageFile');
+      const galleryInput = document.getElementById('galleryImageFiles');
+      if (profileInput) {
+        profileInput.value = '';
+      }
+      if (galleryInput) {
+        galleryInput.value = '';
       }
 
       console.log('🔍 Debug: Calling onMemberAdded callback');
@@ -173,7 +211,7 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
     }));
   };
 
-  const handleFileChange = (e) => {
+  const handleProfileFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       // Validate file type
@@ -184,28 +222,95 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
       
       // Validate file size (5MB max)
       if (file.size > 5 * 1024 * 1024) {
-        setError('Image file size must be less than 5MB');
+        setError('Profile image file size must be less than 5MB');
         return;
       }
       
-      setSelectedFile(file);
+      setSelectedProfileFile(file);
       
       // Create preview
       const reader = new FileReader();
       reader.onloadend = () => {
-        setImagePreview(reader.result);
+        setProfileImagePreview(reader.result);
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const removeImage = () => {
-    setSelectedFile(null);
-    setImagePreview(null);
+  const handleGalleryFilesChange = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length > 0) {
+      // Validate each file
+      for (const file of files) {
+        if (!file.type.startsWith('image/')) {
+          setError('Please select only image files');
+          return;
+        }
+        
+        if (file.size > 5 * 1024 * 1024) {
+          setError('Each image file must be less than 5MB');
+          return;
+        }
+      }
+      
+      // Limit to 10 images max
+      if (files.length > 10) {
+        setError('You can upload a maximum of 10 images');
+        return;
+      }
+      
+      setSelectedGalleryFiles(files);
+      
+      // Create previews for all files
+      const previews = [];
+      let loadedCount = 0;
+      
+      files.forEach((file, index) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          previews[index] = reader.result;
+          loadedCount++;
+          
+          if (loadedCount === files.length) {
+            setGalleryImagePreviews(previews);
+          }
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+  };
+
+  const removeProfileImage = () => {
+    setSelectedProfileFile(null);
+    setProfileImagePreview(null);
     // Reset the file input
-    const fileInput = document.getElementById('imageFile');
+    const fileInput = document.getElementById('profileImageFile');
     if (fileInput) {
       fileInput.value = '';
+    }
+  };
+
+  const removeGalleryImage = (index) => {
+    const newFiles = selectedGalleryFiles.filter((_, i) => i !== index);
+    const newPreviews = galleryImagePreviews.filter((_, i) => i !== index);
+    setSelectedGalleryFiles(newFiles);
+    setGalleryImagePreviews(newPreviews);
+    
+    // If no files left, reset the input
+    if (newFiles.length === 0) {
+      const galleryInput = document.getElementById('galleryImageFiles');
+      if (galleryInput) {
+        galleryInput.value = '';
+      }
+    }
+  };
+
+  const removeAllGalleryImages = () => {
+    setSelectedGalleryFiles([]);
+    setGalleryImagePreviews([]);
+    const galleryInput = document.getElementById('galleryImageFiles');
+    if (galleryInput) {
+      galleryInput.value = '';
     }
   };
 
@@ -311,61 +416,139 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
             />
           </div>
 
-          <div className="space-y-2">
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-              <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              <span>Photo</span>
-            </label>
-            
-            {imagePreview ? (
-              <div className="relative">
-                <img
-                  src={imagePreview}
-                  alt="Preview"
-                  className="w-32 h-32 rounded-xl object-cover border-2 border-gray-200"
-                />
-                <button
-                  type="button"
-                  onClick={removeImage}
-                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-airbnb shadow-airbnb hover:shadow-airbnb-hover"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-            ) : (
-              <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-blue-400 transition-colors">
-                <input
-                  type="file"
-                  id="imageFile"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
-                <label
-                  htmlFor="imageFile"
-                  className="cursor-pointer flex flex-col items-center gap-2"
-                >
-                  <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
-                    <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+          <div className="space-y-6">
+            {/* Profile Picture Section */}
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                <span>Profile Picture</span>
+              </label>
+              
+              {profileImagePreview ? (
+                <div className="relative">
+                  <img
+                    src={profileImagePreview}
+                    alt="Profile Preview"
+                    className="w-32 h-32 rounded-xl object-cover border-2 border-gray-200"
+                  />
+                  <button
+                    type="button"
+                    onClick={removeProfileImage}
+                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-airbnb shadow-airbnb hover:shadow-airbnb-hover"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
+                  </button>
+                </div>
+              ) : (
+                <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-blue-400 transition-colors">
+                  <input
+                    type="file"
+                    id="profileImageFile"
+                    accept="image/*"
+                    onChange={handleProfileFileChange}
+                    className="hidden"
+                  />
+                  <label
+                    htmlFor="profileImageFile"
+                    className="cursor-pointer flex flex-col items-center gap-2"
+                  >
+                    <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+                      <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      </svg>
+                    </div>
+                    <span className="text-sm text-gray-600">Click to upload profile picture</span>
+                    <span className="text-xs text-gray-400">Images up to 10MB (auto-compressed)</span>
+                  </label>
+                </div>
+              )}
+              
+              <p className="text-xs text-gray-500 flex items-center gap-1">
+                <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+                <span>Optional - a beautiful default landscape will be used if no photo is uploaded</span>
+              </p>
+            </div>
+
+            {/* Gallery Images Section */}
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span>Additional Photos</span>
+              </label>
+              
+              {galleryImagePreviews.length > 0 ? (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                    {galleryImagePreviews.map((preview, index) => (
+                      <div key={index} className="relative">
+                        <img
+                          src={preview}
+                          alt={`Gallery Preview ${index + 1}`}
+                          className="w-20 h-20 rounded-lg object-cover border-2 border-gray-200"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeGalleryImage(index)}
+                          className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-airbnb shadow-airbnb hover:shadow-airbnb-hover"
+                        >
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
                   </div>
-                  <span className="text-sm text-gray-600">Click to upload photo</span>
-                  <span className="text-xs text-gray-400">PNG, JPG up to 5MB</span>
-                </label>
-              </div>
-            )}
-            
-            <p className="text-xs text-gray-500 flex items-center gap-1">
-              <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-              </svg>
-              <span>Optional - a beautiful default landscape will be used if no photo is uploaded</span>
-            </p>
+                  <button
+                    type="button"
+                    onClick={removeAllGalleryImages}
+                    className="text-sm text-red-600 hover:text-red-800 flex items-center gap-1"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    Remove all images
+                  </button>
+                </div>
+              ) : (
+                <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-blue-400 transition-colors">
+                  <input
+                    type="file"
+                    id="galleryImageFiles"
+                    accept="image/*"
+                    multiple
+                    onChange={handleGalleryFilesChange}
+                    className="hidden"
+                  />
+                  <label
+                    htmlFor="galleryImageFiles"
+                    className="cursor-pointer flex flex-col items-center gap-2"
+                  >
+                    <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+                      <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      </svg>
+                    </div>
+                    <span className="text-sm text-gray-600">Click to upload additional photos</span>
+                    <span className="text-xs text-gray-400">Multiple images up to 10MB each (max 10, auto-compressed)</span>
+                  </label>
+                </div>
+              )}
+              
+              <p className="text-xs text-gray-500 flex items-center gap-1">
+                <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>Optional - share additional memories and moments</span>
+              </p>
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -608,7 +791,11 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
                 <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" strokeOpacity="0.3"/>
                 <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
               </svg>
-              <span>Adding...</span>
+              <span>
+                {uploadProgress.profile > 0 && uploadProgress.profile < 100 ? 'Uploading profile image...' :
+                 uploadProgress.gallery > 0 && uploadProgress.gallery < 100 ? 'Uploading gallery images...' :
+                 'Adding member...'}
+              </span>
             </>
           ) : (
             <>
