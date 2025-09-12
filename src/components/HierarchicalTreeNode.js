@@ -42,7 +42,7 @@ function HierarchicalTreeNode({
           hasChildren={hasChildren}
           onToggleExpand={onToggleExpand}
           onOpenDetail={onOpenDetail}
-          showSpouse={showSpouse && isRoot}
+          showSpouse={showSpouse && isExpanded}
           spouse={spouse}
           allMembers={allMembers}
           className=""
@@ -71,7 +71,7 @@ function HierarchicalTreeNode({
               onOpenDetail={onOpenDetail}
               level={level + 1}
               isRoot={false}
-              showSpouse={expandedNodes.has(child.id)} // Show spouse when child is expanded
+              showSpouse={true} // Allow spouse to be shown when child is expanded
             />
           ))}
         </ul>
