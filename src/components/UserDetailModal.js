@@ -1,32 +1,39 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import Image from 'next/image';
+import { useState } from "react";
+import Image from "next/image";
 
-function PhotoGallery({ photos = [] }) {
+function PhotoGallery({ photos = [], gridCols = "4" }) {
   const [selectedPhoto, setSelectedPhoto] = useState(null);
 
   // Default photos if no photos provided
   const defaultPhotos = [
-    '/api/placeholder/300/200',
-    '/api/placeholder/300/201', 
-    '/api/placeholder/300/202',
-    '/api/placeholder/300/203'
+    "/api/placeholder/300/200",
+    "/api/placeholder/300/201",
+    "/api/placeholder/300/202",
+    "/api/placeholder/300/203",
   ];
 
   const displayPhotos = photos.length > 0 ? photos : defaultPhotos;
 
+  const getGridClasses = () => {
+    if (gridCols === "2") {
+      return "grid grid-cols-2 gap-2";
+    }
+    return "grid grid-cols-2 md:grid-cols-4 gap-4";
+  };
+
   return (
     <div>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className={getGridClasses()}>
         {displayPhotos.map((photo, index) => (
-          <div 
+          <div
             key={index}
             className="relative aspect-video rounded-lg overflow-hidden cursor-pointer hover:shadow-airbnb-hover transition-airbnb group"
             onClick={() => setSelectedPhoto(photo)}
           >
             <Image
-              src={typeof photo === 'string' ? photo : photo.url}
+              src={typeof photo === "string" ? photo : photo.url}
               alt={`Family photo ${index + 1}`}
               fill
               className="object-cover group-hover:scale-105 transition-transform duration-200"
@@ -38,13 +45,17 @@ function PhotoGallery({ photos = [] }) {
 
       {/* Photo Lightbox */}
       {selectedPhoto && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/80 z-[100] flex items-center justify-center p-4"
           onClick={() => setSelectedPhoto(null)}
         >
           <div className="relative max-w-4xl max-h-[90vh] w-full h-full">
             <Image
-              src={typeof selectedPhoto === 'string' ? selectedPhoto : selectedPhoto.url}
+              src={
+                typeof selectedPhoto === "string"
+                  ? selectedPhoto
+                  : selectedPhoto.url
+              }
               alt="Family photo enlarged"
               fill
               className="object-contain"
@@ -56,8 +67,18 @@ function PhotoGallery({ photos = [] }) {
                 setSelectedPhoto(null);
               }}
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           </div>
@@ -73,27 +94,31 @@ function RelationshipChips({ member, allMembers = [], onMemberClick }) {
 
     // Find spouse
     if (member.spouseId) {
-      const spouse = allMembers.find(m => m.id === member.spouseId);
+      const spouse = allMembers.find((m) => m.id === member.spouseId);
       if (spouse) {
-        relationships.push({ type: 'Spouse', person: spouse, color: 'pink' });
+        relationships.push({ type: "Spouse", person: spouse, color: "pink" });
       }
     }
 
     // Find children
-    const children = allMembers.filter(m => 
-      m.parentIds && m.parentIds.includes(member.id)
+    const children = allMembers.filter(
+      (m) => m.parentIds && m.parentIds.includes(member.id)
     );
-    children.forEach(child => {
-      relationships.push({ type: 'Child', person: child, color: 'green' });
+    children.forEach((child) => {
+      relationships.push({ type: "Child", person: child, color: "green" });
     });
 
     // Find parents
     if (member.parentIds) {
-      member.parentIds.forEach(parentId => {
-        if (!parentId.startsWith('dummy_parent_')) {
-          const parent = allMembers.find(m => m.id === parentId);
+      member.parentIds.forEach((parentId) => {
+        if (!parentId.startsWith("dummy_parent_")) {
+          const parent = allMembers.find((m) => m.id === parentId);
           if (parent) {
-            relationships.push({ type: 'Parent', person: parent, color: 'blue' });
+            relationships.push({
+              type: "Parent",
+              person: parent,
+              color: "blue",
+            });
           }
         }
       });
@@ -101,13 +126,18 @@ function RelationshipChips({ member, allMembers = [], onMemberClick }) {
 
     // Find siblings
     if (member.parentIds) {
-      const siblings = allMembers.filter(m => 
-        m.id !== member.id && 
-        m.parentIds && 
-        m.parentIds.some(pid => member.parentIds.includes(pid))
+      const siblings = allMembers.filter(
+        (m) =>
+          m.id !== member.id &&
+          m.parentIds &&
+          m.parentIds.some((pid) => member.parentIds.includes(pid))
       );
-      siblings.forEach(sibling => {
-        relationships.push({ type: 'Sibling', person: sibling, color: 'purple' });
+      siblings.forEach((sibling) => {
+        relationships.push({
+          type: "Sibling",
+          person: sibling,
+          color: "purple",
+        });
       });
     }
 
@@ -118,13 +148,18 @@ function RelationshipChips({ member, allMembers = [], onMemberClick }) {
 
   const getColorClasses = (color) => {
     const colorMap = {
-      pink: 'bg-pink-100 text-pink-800 border-pink-200 hover:bg-pink-200',
-      green: 'bg-green-100 text-green-800 border-green-200 hover:bg-green-200',
-      blue: 'bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-200',
-      purple: 'bg-purple-100 text-purple-800 border-purple-200 hover:bg-purple-200',
-      orange: 'bg-orange-100 text-orange-800 border-orange-200 hover:bg-orange-200'
+      pink: "bg-pink-100 text-pink-800 border-pink-200 hover:bg-pink-200",
+      green: "bg-green-100 text-green-800 border-green-200 hover:bg-green-200",
+      blue: "bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-200",
+      purple:
+        "bg-purple-100 text-purple-800 border-purple-200 hover:bg-purple-200",
+      orange:
+        "bg-orange-100 text-orange-800 border-orange-200 hover:bg-orange-200",
     };
-    return colorMap[color] || 'bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-200';
+    return (
+      colorMap[color] ||
+      "bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-200"
+    );
   };
 
   if (relationships.length === 0) {
@@ -141,46 +176,60 @@ function RelationshipChips({ member, allMembers = [], onMemberClick }) {
         <button
           key={index}
           onClick={() => onMemberClick && onMemberClick(rel.person)}
-          className={`inline-flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium border transition-colors cursor-pointer ${getColorClasses(rel.color)}`}
+          className={`inline-flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium border transition-colors cursor-pointer ${getColorClasses(
+            rel.color
+          )}`}
         >
           <span className="w-6 h-6 rounded-full bg-white/50 flex items-center justify-center text-xs font-bold">
             {rel.person.name.charAt(0)}
           </span>
-          <span>{rel.type}: {rel.person.name}</span>
+          <span>
+            {rel.type}: {rel.person.name}
+          </span>
         </button>
       ))}
     </div>
   );
 }
 
-function UserDetailModal({ member, isOpen, onClose, allMembers = [], onMemberClick }) {
+function UserDetailModal({
+  member,
+  isOpen,
+  onClose,
+  allMembers = [],
+  onMemberClick,
+}) {
+  const [selectedPhoto, setSelectedPhoto] = useState(null);
+  
   if (!isOpen || !member) return null;
 
   const formatDate = (dateObj) => {
-    if (!dateObj) return '';
-    const date = dateObj.seconds ? new Date(dateObj.seconds * 1000) : new Date(dateObj);
-    return date.toLocaleDateString('en-US', { 
-      day: 'numeric',
-      month: 'long', 
-      year: 'numeric' 
+    if (!dateObj) return "";
+    const date = dateObj.seconds
+      ? new Date(dateObj.seconds * 1000)
+      : new Date(dateObj);
+    return date.toLocaleDateString("en-US", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
     });
   };
 
   const formatDateRange = (birthDate, deathDate) => {
     const birth = formatDate(birthDate);
     const death = formatDate(deathDate);
-    
+
     if (birth && death) {
       return `${birth} - ${death}`;
     } else if (birth) {
       return `Born ${birth}`;
     }
-    return '';
+    return "";
   };
 
   const getDefaultImage = () => {
-    if (!member.id) return '/api/placeholder/120/120';
-    const hash = member.id.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
+    if (!member.id) return "/api/placeholder/120/120";
+    const hash = member.id.split("").reduce((a, b) => a + b.charCodeAt(0), 0);
     return `/api/placeholder/120/${120 + (hash % 5)}`;
   };
 
@@ -190,15 +239,42 @@ function UserDetailModal({ member, isOpen, onClose, allMembers = [], onMemberCli
         <div className="p-6 flex">
           {/* Image Section - 1/3 width */}
           <div className="w-1/3 pr-6">
-            <div className="w-full aspect-square rounded-lg overflow-hidden border-4 border-gray-200 shadow-lg">
-              <Image 
-                src={member.imageUrl || getDefaultImage()} 
+            <div 
+              className="relative w-full aspect-square rounded-lg overflow-hidden border-4 border-gray-200 shadow-lg mb-6 cursor-pointer hover:shadow-airbnb-hover transition-airbnb group"
+              onClick={() => setSelectedPhoto(member.imageUrl || getDefaultImage())}
+            >
+              <Image
+                src={member.imageUrl || getDefaultImage()}
                 alt={member.name}
                 width={400}
                 height={400}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
               />
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
             </div>
+
+            {/* Photo Gallery Section */}
+            {member.galleryImages && member.galleryImages.length > 0 && (
+              <div>
+                <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.293-1.293a2 2 0 012.828 0L20 15m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    />
+                  </svg>
+                  Photos
+                </h2>
+                <PhotoGallery photos={member.galleryImages} gridCols="2" />
+              </div>
+            )}
           </div>
 
           {/* Content Section - 2/3 width */}
@@ -206,7 +282,9 @@ function UserDetailModal({ member, isOpen, onClose, allMembers = [], onMemberCli
             {/* Header */}
             <div className="flex justify-between items-start mb-6">
               <div>
-                <h1 className="text-3xl font-bold text-gray-800 mb-2">{member.name}</h1>
+                <h1 className="text-3xl font-bold text-gray-800 mb-2">
+                  {member.name}
+                </h1>
                 {formatDateRange(member.birthDate, member.deathDate) && (
                   <p className="text-lg text-gray-600 mb-4">
                     {formatDateRange(member.birthDate, member.deathDate)}
@@ -218,70 +296,122 @@ function UserDetailModal({ member, isOpen, onClose, allMembers = [], onMemberCli
                       {member.gender}
                     </span>
                   )}
-                  {member.root && (
-                    <span className="px-3 py-1 bg-airbnb-rausch/10 text-airbnb-rausch rounded-full text-sm font-medium">
-                      Root Member
-                    </span>
-                  )}
                 </div>
               </div>
               <button
                 onClick={onClose}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-airbnb"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
-            
+
             {/* Content Sections */}
             <div className="space-y-8 flex-1 overflow-y-auto">
-              {/* Photo Gallery Section */}
-              {member.galleryImages && member.galleryImages.length > 0 && (
-                <div>
-                  <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.293-1.293a2 2 0 012.828 0L20 15m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    Photos
-                  </h2>
-                  <PhotoGallery photos={member.galleryImages} />
-                </div>
-              )}
-              
               {/* Family Relationships */}
               <div>
                 <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                    />
                   </svg>
                   Family Connections
                 </h2>
-                <RelationshipChips 
-                  member={member} 
-                  allMembers={allMembers} 
+                <RelationshipChips
+                  member={member}
+                  allMembers={allMembers}
                   onMemberClick={onMemberClick}
                 />
               </div>
-              
+
               {/* Biography/Notes Section */}
               {member.notes && (
                 <div>
                   <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                  Biography & Notes
-                </h2>
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                      />
+                    </svg>
+                    Bio
+                  </h2>
                   <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                    <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{member.notes}</p>
+                    <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+                      {member.notes}
+                    </p>
                   </div>
                 </div>
               )}
             </div>
           </div>
         </div>
+        
+        {/* Profile Photo Lightbox */}
+        {selectedPhoto && (
+          <div
+            className="fixed inset-0 bg-black/80 z-[100] flex items-center justify-center p-4"
+            onClick={() => setSelectedPhoto(null)}
+          >
+            <div className="relative max-w-4xl max-h-[90vh] w-full h-full">
+              <Image
+                src={selectedPhoto}
+                alt="Profile photo enlarged"
+                fill
+                className="object-contain"
+              />
+              <button
+                className="absolute top-4 right-4 text-white bg-black/50 hover:bg-black/70 rounded-full p-2 transition-colors"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedPhoto(null);
+                }}
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
