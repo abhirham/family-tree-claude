@@ -238,7 +238,7 @@ function UserDetailModal({ member, isOpen, onClose, allMembers = [], onMemberCli
             {/* Content Sections */}
             <div className="space-y-8 flex-1 overflow-y-auto">
               {/* Photo Gallery Section */}
-              {member.photos && member.photos.length > 0 && (
+              {member.galleryImages && member.galleryImages.length > 0 && (
                 <div>
                   <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -246,7 +246,7 @@ function UserDetailModal({ member, isOpen, onClose, allMembers = [], onMemberCli
                     </svg>
                     Photos
                   </h2>
-                  <PhotoGallery photos={member.photos} />
+                  <PhotoGallery photos={member.galleryImages} />
                 </div>
               )}
               
