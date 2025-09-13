@@ -127,10 +127,75 @@ body {
   height: 20px;
 }
 
-/* Connector styles on hover - make lines more visible */
+/* Enhanced organic connector styles */
+.tree li::before, .tree li::after {
+  border-top-color: #D97706; /* Warmer amber color */
+  border-left-color: #D97706;
+  transition: all 0.3s ease-out;
+}
+
+.tree ul ul::before {
+  border-left-color: #D97706;
+}
+
+/* Connector styles on hover - make lines more visible and warm */
 .tree-node:hover + .tree ul li::after, 
 .tree-node:hover + .tree ul li::before, 
 .tree-node:hover + .tree ul::before, 
 .tree-node:hover + .tree ul ul::before {
-  border-color: #94a0b4;
+  border-color: #B45309;
+  transform: scale(1.02);
+}
+
+/* Organic tree animations */
+@keyframes animate-in {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-in {
+  animation: animate-in 0.8s ease-out forwards;
+}
+
+/* Breathing animation for tree nodes */
+@keyframes tree-breathe {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+}
+
+/* Gentle pulsing for interactive elements */
+@keyframes heritage-pulse {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.1);
+  }
+}
+
+/* Add subtle animation to tree nodes */
+.tree li {
+  animation: animate-in 0.6s ease-out forwards;
+  animation-delay: calc(var(--animation-order, 0) * 0.1s);
+}
+
+/* Enhanced transitions for smooth 60fps animations */
+.tree ul {
+  transition: all 0.6s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.tree li {
+  transition: all 0.6s cubic-bezier(0.4, 0.0, 0.2, 1);
 }

@@ -125,7 +125,7 @@ export default function Home() {
             {/* Title */}
             <div className="flex items-center min-w-0 flex-1">
               <h1 className="text-2xl font-semibold text-gray-900 truncate">
-                Family Lineage
+                Your Family's Story
               </h1>
               {user && (
                 <span className="ml-4 text-sm text-gray-500 hidden sm:inline">
@@ -154,7 +154,7 @@ export default function Home() {
                       </>
                     ) : (
                       <>
-                        <span>Add Member</span>
+                        <span>Introduce Someone New</span>
                       </>
                     )}
                   </button>
@@ -212,11 +212,11 @@ export default function Home() {
         <Modal 
           isOpen={showAddForm}
           onClose={() => setShowAddForm(false)}
-          title="Add New Family Member"
+          title="Introduce Someone New"
         >
           <div className="bg-gray-50 rounded-lg p-4 mb-6 border border-gray-200">
             <p className="text-gray-700 text-sm">
-              Create connections that span generations. Add family members and build your family tree with beautiful stories and memories.
+              Every family story starts with someone special. Who would you like to introduce to your family's story?
             </p>
           </div>
           <AddFamilyMemberForm onMemberAdded={handleMemberAdded} />

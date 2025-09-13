@@ -315,7 +315,7 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-8">
       
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-xl flex items-center gap-2">
@@ -326,12 +326,62 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
             </div>
           )}
 
+          {/* Photo-First Section */}
+          <div className="text-center space-y-4">
+            <h2 className="text-xl font-medium text-gray-800">Let's start with a photo</h2>
+            <p className="text-gray-600">Photos help us remember the people we love most</p>
+            
+            {profileImagePreview ? (
+              <div className="relative inline-block">
+                <img
+                  src={profileImagePreview}
+                  alt="Family member"
+                  className="w-48 h-48 rounded-2xl object-cover border-4 border-gray-200 shadow-lg mx-auto"
+                />
+                <button
+                  type="button"
+                  onClick={removeProfileImage}
+                  className="absolute -top-3 -right-3 bg-red-500 text-white rounded-full p-2 hover:bg-red-600 transition-airbnb shadow-lg"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            ) : (
+              <div className="relative">
+                <input
+                  type="file"
+                  id="profileImageFile"
+                  accept="image/*"
+                  onChange={handleProfileFileChange}
+                  className="hidden"
+                />
+                <label
+                  htmlFor="profileImageFile"
+                  className="cursor-pointer group block"
+                >
+                  <div className="w-48 h-48 mx-auto border-3 border-dashed border-gray-300 rounded-2xl flex flex-col items-center justify-center gap-4 hover:border-airbnb-rausch hover:bg-red-50 transition-all duration-200 group-hover:scale-105">
+                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center group-hover:bg-red-100 transition-colors">
+                      <svg className="w-8 h-8 text-gray-400 group-hover:text-airbnb-rausch" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      </svg>
+                    </div>
+                    <div className="text-center">
+                      <span className="text-base text-gray-700 group-hover:text-airbnb-rausch font-medium">Add their photo</span>
+                      <p className="text-sm text-gray-500 mt-1">Click to choose from your device</p>
+                    </div>
+                  </div>
+                </label>
+              </div>
+            )}
+            
+            <p className="text-xs text-gray-500">Don't have a photo? That's okay - you can always add one later</p>
+          </div>
+
           <div className="space-y-2">
-            <label htmlFor="name" className="flex items-center gap-2 text-sm font-medium text-gray-700">
-              <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-              <span>Name *</span>
+            <label htmlFor="name" className="text-lg font-medium text-gray-800">
+              What's this person's name?
             </label>
             <input
               type="text"
@@ -340,18 +390,15 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
               value={formData.name}
               onChange={handleChange}
               required
-              placeholder="Enter full name"
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white"
+              placeholder="Their full name here..."
+              className="w-full px-4 py-4 border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-airbnb-rausch focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white text-lg"
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <label htmlFor="birthDate" className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                <span>Birth Date</span>
+              <label htmlFor="birthDate" className="text-base font-medium text-gray-700">
+                When were they born?
               </label>
               <input
                 type="date"
@@ -361,17 +408,14 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
                 onChange={handleChange}
                 min="1800-01-01"
                 max={new Date().toISOString().split('T')[0]}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-airbnb-rausch focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white"
               />
-              <p className="text-xs text-gray-500">Valid range: 1800 - {new Date().getFullYear()}</p>
+              <p className="text-xs text-gray-500">If you're not sure of the exact date, that's okay</p>
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="deathDate" className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                <span>Death Date</span>
+              <label htmlFor="deathDate" className="text-base font-medium text-gray-700">
+                Are they still with us?
               </label>
               <input
                 type="date"
@@ -381,12 +425,13 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
                 onChange={handleChange}
                 min={formData.birthDate || "1800-01-01"}
                 max={new Date().toISOString().split('T')[0]}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white"
+                placeholder="Leave empty if they're still alive"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-airbnb-rausch focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white"
               />
               <p className="text-xs text-gray-500">
-                {formData.birthDate 
-                  ? `Must be after birth date (${new Date(formData.birthDate).toLocaleDateString()})` 
-                  : `Valid range: 1800 - ${new Date().getFullYear()}`
+                {formData.deathDate 
+                  ? `They passed away after ${formData.birthDate ? new Date(formData.birthDate).toLocaleDateString() : 'their birth'}` 
+                  : 'Leave empty if they\'re still alive'
                 }
               </p>
             </div>
@@ -416,72 +461,11 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
             />
           </div>
 
-          <div className="space-y-6">
-            {/* Profile Picture Section */}
+          {/* Gallery Images Section */}
+          <div className="space-y-4">
             <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-                <span>Profile Picture</span>
-              </label>
-              
-              {profileImagePreview ? (
-                <div className="relative">
-                  <img
-                    src={profileImagePreview}
-                    alt="Profile Preview"
-                    className="w-32 h-32 rounded-xl object-cover border-2 border-gray-200"
-                  />
-                  <button
-                    type="button"
-                    onClick={removeProfileImage}
-                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-airbnb shadow-airbnb hover:shadow-airbnb-hover"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-              ) : (
-                <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-blue-400 transition-colors">
-                  <input
-                    type="file"
-                    id="profileImageFile"
-                    accept="image/*"
-                    onChange={handleProfileFileChange}
-                    className="hidden"
-                  />
-                  <label
-                    htmlFor="profileImageFile"
-                    className="cursor-pointer flex flex-col items-center gap-2"
-                  >
-                    <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
-                      <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                      </svg>
-                    </div>
-                    <span className="text-sm text-gray-600">Click to upload profile picture</span>
-                    <span className="text-xs text-gray-400">Images up to 10MB (auto-compressed)</span>
-                  </label>
-                </div>
-              )}
-              
-              <p className="text-xs text-gray-500 flex items-center gap-1">
-                <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                </svg>
-                <span>Optional - a beautiful default landscape will be used if no photo is uploaded</span>
-              </p>
-            </div>
-
-            {/* Gallery Images Section */}
-            <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                <span>Additional Photos</span>
+              <label className="text-base font-medium text-gray-700">
+                Share more memories
               </label>
               
               {galleryImagePreviews.length > 0 ? (
@@ -552,11 +536,8 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="notes" className="flex items-center gap-2 text-sm font-medium text-gray-700">
-              <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-              </svg>
-              <span>Notes & Stories</span>
+            <label htmlFor="notes" className="text-base font-medium text-gray-700">
+              What makes them special?
             </label>
             <textarea
               id="notes"
@@ -564,39 +545,32 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
               value={formData.notes}
               onChange={handleChange}
               rows={4}
-              placeholder="Share memories, achievements, or stories about this person..."
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white resize-none"
+              placeholder="Share a memory, what they were known for, or what made them smile..."
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-airbnb-rausch focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white resize-none"
             />
+            <p className="text-xs text-gray-500">Every person has a story worth remembering</p>
           </div>
 
           {!isFirstUser && (
-            <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
-              <h3 className="flex items-center gap-2 text-sm font-medium text-blue-800 mb-4">
-                <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                </svg>
-                <span>Family Connection</span>
+            <div className="bg-orange-50 rounded-xl p-6 border border-orange-200">
+              <h3 className="text-lg font-medium text-orange-800 mb-6">
+                How are they connected to your family?
               </h3>
               
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <label htmlFor="linkedMemberId" className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                    <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                    </svg>
-                    <span>Link to Existing Family Member *</span>
+                  <label htmlFor="linkedMemberId" className="text-base font-medium text-gray-700">
+                    Who in your family do you know them through?
                   </label>
                   <AutoComplete
                     options={existingMembers}
                     value={formData.linkedMemberId}
                     onSelect={(value) => handleChange({ target: { name: 'linkedMemberId', value } })}
-                    placeholder="Type to search family members..."
+                    placeholder="Start typing a family member's name..."
                     displayKey="name"
                     valueKey="id"
                     required={!isFirstUser}
-                    icon={<svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                    </svg>}
+                    className="text-base"
                     renderOption={(member, isHighlighted) => (
                       <div className={`flex items-center gap-2 ${isHighlighted ? 'text-blue-700' : 'text-gray-900'}`}>
                         {member.root ? (
@@ -620,11 +594,8 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
                 </div>
 
                 <div className="space-y-2">
-                  <label htmlFor="relationshipType" className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                    <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                    </svg>
-                    <span>Relationship Type *</span>
+                  <label htmlFor="relationshipType" className="text-base font-medium text-gray-700">
+                    Who is this person to you?
                   </label>
                   <AutoComplete
                     options={(() => {
@@ -799,7 +770,7 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
             </>
           ) : (
             <>
-              <span>{isFirstUser ? 'Create First Member' : 'Add Family Member'}</span>
+              <span>{isFirstUser ? 'Start Your Family Story' : 'Add Them to Your Story'}</span>
             </>
           )}
         </button>
