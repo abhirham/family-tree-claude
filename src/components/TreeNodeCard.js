@@ -84,7 +84,7 @@ function TreeNodeCard({
 
   return (
     <div
-      className={`relative flex items-center justify-center gap-8 ${className}`}
+      className={`relative flex items-center justify-center gap-3 ${className}`}
     >
       {/* Main Member Card - Matching Image #2 Style */}
       <div className="relative group">
@@ -109,13 +109,6 @@ function TreeNodeCard({
             <h3 className="text-base font-semibold text-gray-900 mb-1 leading-tight">
               {member.name}
             </h3>
-            <p className="text-sm text-gray-500">
-              {member.gender === "male"
-                ? "Son"
-                : member.gender === "female"
-                ? "Daughter"
-                : "Family Member"}
-            </p>
           </div>
 
           {/* Stats Section - 2 columns: Age and Children */}
@@ -157,7 +150,7 @@ function TreeNodeCard({
       {showSpouse && spouse && (
         <>
           {/* Connection Line */}
-          <div className="flex-1 h-0.5 bg-gray-300 mx-4" />
+          {/* <div className="flex-1 h-0.5 bg-gray-300 mx-4" /> */}
 
           {/* Spouse Card - Matching Image #2 Style */}
           <div className="relative group">
