@@ -27,7 +27,8 @@
       "WebFetch(domain:medium.com)",
       "mcp__playwright__browser_console_messages",
       "Bash(dir:*)",
-      "mcp__playwright__browser_file_upload"
+      "mcp__playwright__browser_file_upload",
+      "Bash(mkdir:*)"
     ],
     "deny": [],
     "ask": []
