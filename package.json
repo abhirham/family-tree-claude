@@ -16,7 +16,6 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
-    "tailwindcss": "^4",
-    "firebase-tools": "^13.0.0"
+    "tailwindcss": "^4"
   }
 }
