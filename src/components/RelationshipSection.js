@@ -2,7 +2,7 @@
 
 import PersonCard from "./PersonCard";
 
-function RelationshipSection({ title, members, onMemberClick, currentPerson }) {
+function RelationshipSection({ title, members, onMemberClick, currentPerson, onAssignAdmin }) {
   if (!members || members.length === 0) return null;
 
   return (
@@ -23,6 +23,7 @@ function RelationshipSection({ title, members, onMemberClick, currentPerson }) {
             onClick={onMemberClick}
             relationshipType={memberData.type}
             isSelected={currentPerson?.id === memberData.member.id}
+            onAssignAdmin={onAssignAdmin}
           />
         ))}
       </div>

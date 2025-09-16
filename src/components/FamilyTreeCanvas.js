@@ -17,6 +17,7 @@ function FamilyTreeCanvas({
   onNavigateToMember,
   selectedPerson,
   setSelectedPerson,
+  onAssignAdmin,
 }) {
   // State for tracking expanded nodes
   const [expandedNodes, setExpandedNodes] = useState(new Set());
@@ -535,6 +536,7 @@ function FamilyTreeCanvas({
                   expandedNodes={expandedNodes}
                   onToggleExpand={handleToggleExpand}
                   onOpenDetail={onOpenDetail}
+                  onAssignAdmin={onAssignAdmin}
                   level={0}
                   isRoot={false}
                   showSpouse={true} // Always show spouse for selected person
@@ -547,6 +549,7 @@ function FamilyTreeCanvas({
                   expandedNodes={expandedNodes}
                   onToggleExpand={handleToggleExpand}
                   onOpenDetail={onOpenDetail}
+                  onAssignAdmin={onAssignAdmin}
                   level={0}
                   isRoot={true}
                   showSpouse={true}
@@ -572,6 +575,7 @@ function FamilyTreeCanvas({
                       expandedNodes={expandedNodes}
                       onToggleExpand={handleToggleExpand}
                       onOpenDetail={onOpenDetail}
+                      onAssignAdmin={onAssignAdmin}
                       level={0}
                       isRoot={true}
                       showSpouse={expandedNodes.has(rootMember.id)} // Show spouse when this root is expanded

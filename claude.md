@@ -15,7 +15,6 @@ A modern family tree application built with Next.js 15, React 19, and Firebase F
 
 ### FamilyTree.js (Main Component)
 
-- Central family tree display with navigation sidebar
 - Handles member relationships (parents, children, spouses, siblings, step-children)
 - Supports path finding between family members
 - Navigation stack for browsing history
@@ -85,7 +84,6 @@ A modern family tree application built with Next.js 15, React 19, and Firebase F
 - **Colors**: Airbnb Rausch (`#FF385C`), Airbnb Babu (`#00A699`)
 - **Shadows**: `shadow-airbnb`, `shadow-airbnb-hover`
 - **Transitions**: `transition-airbnb` (0.2s ease-out)
-- **Layout**: Responsive design with fixed sidebar on desktop
 
 ## File Structure
 
@@ -126,7 +124,6 @@ src/
 ### Root Member Display
 
 - Shows all members with `root: true` when no specific person selected
-- Navigation sidebar hidden on mobile/tablet, visible on desktop
 - Clean empty state with call-to-action
 
 ## UI Development Guidelines

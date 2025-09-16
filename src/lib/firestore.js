@@ -581,12 +581,28 @@ export async function getAllUsers() {
 // Get a specific user profile
 export async function getUserProfile(uid) {
   try {
+    // First try to get by document ID (UID)
     const docRef = doc(db, USERS_COLLECTION_NAME, uid);
     const docSnap = await getDoc(docRef);
 
     if (docSnap.exists()) {
       return { id: docSnap.id, ...docSnap.data() };
     } else {
+      // Fallback: search by UID field if document ID doesn't match
+      console.log("Document not found by ID, searching by UID field...");
+      const q = query(
+        collection(db, USERS_COLLECTION_NAME),
+        where("uid", "==", uid)
+      );
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        const userDoc = querySnapshot.docs[0];
+        console.log("Found user by UID field:", userDoc.id);
+        return { id: userDoc.id, ...userDoc.data() };
+      }
+
+      console.log("User profile not found for UID:", uid);
       return null;
     }
   } catch (error) {
