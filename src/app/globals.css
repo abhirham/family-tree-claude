@@ -10,21 +10,21 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-surface: var(--surface);
-  
-  --color-airbnb-rausch: #FF385C;
-  --color-airbnb-babu: #00A699;
-  
-  --color-gray-50: #F9F9F9;
-  --color-gray-100: #F7F7F7;
-  --color-gray-200: #EBEBEB;
-  --color-gray-300: #DDDDDD;
-  --color-gray-400: #B0B0B0;
+
+  --color-airbnb-rausch: #ff385c;
+  --color-airbnb-babu: #00a699;
+
+  --color-gray-50: #f9f9f9;
+  --color-gray-100: #f7f7f7;
+  --color-gray-200: #ebebeb;
+  --color-gray-300: #dddddd;
+  --color-gray-400: #b0b0b0;
   --color-gray-500: #717171;
   --color-gray-600: #484848;
   --color-gray-700: #222222;
-  --color-gray-800: #1D1D1D;
+  --color-gray-800: #1d1d1d;
   --color-gray-900: #000000;
-  
+
   --font-sans: system-ui, -apple-system, sans-serif;
   --font-mono: ui-monospace, monospace;
 }
@@ -50,7 +50,7 @@ body {
 
 /* Family Tree Connector Lines - CSS-based implementation */
 .tree ul {
-  padding-top: 20px; 
+  padding-top: 20px;
   position: relative;
   display: flex;
   justify-content: center;
@@ -71,34 +71,37 @@ body {
 }
 
 /* Use ::before and ::after to draw the connectors */
-.tree li::before, .tree li::after {
-  content: '';
-  position: absolute; 
-  top: 0; 
+.tree li::before,
+.tree li::after {
+  content: "";
+  position: absolute;
+  top: 0;
   right: 50%;
   border-top: 1px solid #ccc;
-  width: 50%; 
+  width: 50%;
   height: 20px;
 }
 
 .tree li::after {
-  right: auto; 
+  right: auto;
   left: 50%;
   border-left: 1px solid #ccc;
 }
 
 /* Remove left-right connectors from elements without any siblings */
-.tree li:only-child::after, .tree li:only-child::before {
+.tree li:only-child::after,
+.tree li:only-child::before {
   display: none;
 }
 
 /* Remove space from the top of single children */
-.tree li:only-child { 
+.tree li:only-child {
   padding-top: 0;
 }
 
 /* Remove left connector from first child and right connector from last child */
-.tree li:first-child::before, .tree li:last-child::after {
+.tree li:first-child::before,
+.tree li:last-child::after {
   border: 0 none;
 }
 
@@ -118,32 +121,33 @@ body {
 
 /* Add downward connectors from parents */
 .tree ul ul::before {
-  content: '';
-  position: absolute; 
-  top: 0; 
+  content: "";
+  position: absolute;
+  top: 0;
   left: 50%;
   border-left: 1px solid #ccc;
-  width: 0; 
+  width: 0;
   height: 20px;
 }
 
 /* Enhanced organic connector styles */
-.tree li::before, .tree li::after {
-  border-top-color: #D97706; /* Warmer amber color */
-  border-left-color: #D97706;
+.tree li::before,
+.tree li::after {
+  border-top-color: #d97706; /* Warmer amber color */
+  border-left-color: #d97706;
   transition: all 0.3s ease-out;
 }
 
 .tree ul ul::before {
-  border-left-color: #D97706;
+  border-left-color: #d97706;
 }
 
 /* Connector styles on hover - make lines more visible and warm */
-.tree-node:hover + .tree ul li::after, 
-.tree-node:hover + .tree ul li::before, 
-.tree-node:hover + .tree ul::before, 
+.tree-node:hover + .tree ul li::after,
+.tree-node:hover + .tree ul li::before,
+.tree-node:hover + .tree ul::before,
 .tree-node:hover + .tree ul ul::before {
-  border-color: #B45309;
+  border-color: #b45309;
   transform: scale(1.02);
 }
 
@@ -165,7 +169,8 @@ body {
 
 /* Breathing animation for tree nodes */
 @keyframes tree-breathe {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1);
   }
   50% {
@@ -175,7 +180,8 @@ body {
 
 /* Gentle pulsing for interactive elements */
 @keyframes heritage-pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 0.3;
     transform: scale(1);
   }
@@ -193,9 +199,9 @@ body {
 
 /* Enhanced transitions for smooth 60fps animations */
 .tree ul {
-  transition: all 0.6s cubic-bezier(0.4, 0.0, 0.2, 1);
+  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .tree li {
-  transition: all 0.6s cubic-bezier(0.4, 0.0, 0.2, 1);
+  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }

@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useState, useMemo } from 'react';
-import TreeNodeCard from './TreeNodeCard';
+import { useState, useMemo } from "react";
+import TreeNodeCard from "./TreeNodeCard";
 
 function HierarchicalTreeNode({
   member,
@@ -15,20 +15,20 @@ function HierarchicalTreeNode({
 }) {
   // Get children of this member
   const children = useMemo(() => {
-    return allMembers.filter(person => 
-      person.parentIds && person.parentIds.includes(member.id)
+    return allMembers.filter(
+      (person) => person.parentIds && person.parentIds.includes(member.id),
     );
   }, [allMembers, member.id]);
 
   // Get spouse of this member
   const spouse = useMemo(() => {
     if (!member.spouseId) return null;
-    return allMembers.find(person => person.id === member.spouseId);
+    return allMembers.find((person) => person.id === member.spouseId);
   }, [allMembers, member.spouseId]);
 
   // Check if this node is expanded
   const isExpanded = expandedNodes.has(member.id);
-  
+
   // Check if this member has children
   const hasChildren = children.length > 0;
 
@@ -53,27 +53,29 @@ function HierarchicalTreeNode({
       {isExpanded && hasChildren && (
         <ul>
           {children
-            .filter(child => {
+            .filter((child) => {
               // Hide siblings if any sibling is expanded at this level
-              const anySiblingExpanded = children.some(c => expandedNodes.has(c.id));
+              const anySiblingExpanded = children.some((c) =>
+                expandedNodes.has(c.id),
+              );
               if (anySiblingExpanded) {
                 return expandedNodes.has(child.id);
               }
               return true;
             })
             .map((child, index, filteredChildren) => (
-            <HierarchicalTreeNode
-              key={child.id}
-              member={child}
-              allMembers={allMembers}
-              expandedNodes={expandedNodes}
-              onToggleExpand={onToggleExpand}
-              onOpenDetail={onOpenDetail}
-              level={level + 1}
-              isRoot={false}
-              showSpouse={true} // Allow spouse to be shown when child is expanded
-            />
-          ))}
+              <HierarchicalTreeNode
+                key={child.id}
+                member={child}
+                allMembers={allMembers}
+                expandedNodes={expandedNodes}
+                onToggleExpand={onToggleExpand}
+                onOpenDetail={onOpenDetail}
+                level={level + 1}
+                isRoot={false}
+                showSpouse={true} // Allow spouse to be shown when child is expanded
+              />
+            ))}
         </ul>
       )}
 
@@ -82,10 +84,11 @@ function HierarchicalTreeNode({
         <div className="mt-8">
           {(() => {
             // Get spouse's children who are not already shown as this person's children
-            const spouseChildren = allMembers.filter(person => 
-              person.parentIds && 
-              person.parentIds.includes(spouse.id) &&
-              (!person.parentIds.includes(member.id)) // Not already a child of this member
+            const spouseChildren = allMembers.filter(
+              (person) =>
+                person.parentIds &&
+                person.parentIds.includes(spouse.id) &&
+                !person.parentIds.includes(member.id), // Not already a child of this member
             );
 
             if (spouseChildren.length === 0) return null;
@@ -96,7 +99,7 @@ function HierarchicalTreeNode({
                 <div className="text-xs text-gray-500 text-center mb-4">
                   Step-children from {spouse.name}
                 </div>
-                
+
                 {/* Step-children as separate ul */}
                 <ul>
                   {spouseChildren.map((stepChild) => (

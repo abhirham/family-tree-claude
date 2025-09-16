@@ -125,7 +125,7 @@ function TreeNodeCard({
               <div className="text-lg font-bold text-gray-900">
                 {allMembers
                   ? allMembers.filter(
-                      (m) => m.parentIds && m.parentIds.includes(member.id)
+                      (m) => m.parentIds && m.parentIds.includes(member.id),
                     ).length
                   : 0}
               </div>
@@ -192,7 +192,7 @@ function TreeNodeCard({
                   <div className="text-lg font-bold text-gray-900">
                     {allMembers
                       ? allMembers.filter(
-                          (m) => m.parentIds && m.parentIds.includes(spouse.id)
+                          (m) => m.parentIds && m.parentIds.includes(spouse.id),
                         ).length
                       : 0}
                   </div>

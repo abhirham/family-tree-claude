@@ -102,7 +102,7 @@ function RelationshipChips({ member, allMembers = [], onMemberClick }) {
 
     // Find children
     const children = allMembers.filter(
-      (m) => m.parentIds && m.parentIds.includes(member.id)
+      (m) => m.parentIds && m.parentIds.includes(member.id),
     );
     children.forEach((child) => {
       relationships.push({ type: "Child", person: child, color: "green" });
@@ -130,7 +130,7 @@ function RelationshipChips({ member, allMembers = [], onMemberClick }) {
         (m) =>
           m.id !== member.id &&
           m.parentIds &&
-          m.parentIds.some((pid) => member.parentIds.includes(pid))
+          m.parentIds.some((pid) => member.parentIds.includes(pid)),
       );
       siblings.forEach((sibling) => {
         relationships.push({
@@ -177,7 +177,7 @@ function RelationshipChips({ member, allMembers = [], onMemberClick }) {
           key={index}
           onClick={() => onMemberClick && onMemberClick(rel.person)}
           className={`inline-flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium border transition-colors cursor-pointer ${getColorClasses(
-            rel.color
+            rel.color,
           )}`}
         >
           <span className="w-6 h-6 rounded-full bg-white/50 flex items-center justify-center text-xs font-bold">
@@ -200,7 +200,7 @@ function UserDetailModal({
   onMemberClick,
 }) {
   const [selectedPhoto, setSelectedPhoto] = useState(null);
-  
+
   if (!isOpen || !member) return null;
 
   const formatDate = (dateObj) => {
@@ -239,9 +239,11 @@ function UserDetailModal({
         <div className="p-6 flex">
           {/* Image Section - 1/3 width */}
           <div className="w-1/3 pr-6">
-            <div 
+            <div
               className="relative w-full aspect-square rounded-lg overflow-hidden border-4 border-gray-200 shadow-lg mb-6 cursor-pointer hover:shadow-airbnb-hover transition-airbnb group"
-              onClick={() => setSelectedPhoto(member.imageUrl || getDefaultImage())}
+              onClick={() =>
+                setSelectedPhoto(member.imageUrl || getDefaultImage())
+              }
             >
               <Image
                 src={member.imageUrl || getDefaultImage()}
@@ -374,7 +376,7 @@ function UserDetailModal({
             </div>
           </div>
         </div>
-        
+
         {/* Profile Photo Lightbox */}
         {selectedPhoto && (
           <div

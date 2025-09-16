@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import ImageUploadTest from '@/components/ImageUploadTest';
+import ImageUploadTest from "@/components/ImageUploadTest";
 
 export default function TestUploadPage() {
   return (

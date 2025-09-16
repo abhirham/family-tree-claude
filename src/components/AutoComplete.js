@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from "react";
 
-export default function AutoComplete({ 
-  options = [], 
-  value, 
-  onChange, 
+export default function AutoComplete({
+  options = [],
+  value,
+  onChange,
   onSelect,
   placeholder = "Type to search...",
   displayKey = null, // For objects: which key to display
-  valueKey = null,   // For objects: which key to use as value
+  valueKey = null, // For objects: which key to use as value
   className = "",
   disabled = false,
   required = false,
@@ -17,9 +17,9 @@ export default function AutoComplete({
   filterFunction = null, // Custom filter function
   icon = null,
   clearable = false, // Enable clear button
-  onClear = null // Callback when cleared
+  onClear = null, // Callback when cleared
 }) {
-  const [inputValue, setInputValue] = useState('');
+  const [inputValue, setInputValue] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
   const [filteredOptions, setFilteredOptions] = useState([]);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
@@ -29,16 +29,18 @@ export default function AutoComplete({
   // Update input value when controlled value changes
   useEffect(() => {
     if (value !== undefined) {
-      const selectedOption = options.find(option => {
+      const selectedOption = options.find((option) => {
         const optionValue = valueKey ? option[valueKey] : option;
         return optionValue === value;
       });
-      
+
       if (selectedOption) {
-        const displayValue = displayKey ? selectedOption[displayKey] : selectedOption;
+        const displayValue = displayKey
+          ? selectedOption[displayKey]
+          : selectedOption;
         setInputValue(String(displayValue));
-      } else if (value === '' || value === null || value === undefined) {
-        setInputValue('');
+      } else if (value === "" || value === null || value === undefined) {
+        setInputValue("");
       }
     }
   }, [value, options, displayKey, valueKey]);
@@ -54,12 +56,12 @@ export default function AutoComplete({
     if (filterFunction) {
       filtered = filterFunction(options, inputValue);
     } else {
-      filtered = options.filter(option => {
+      filtered = options.filter((option) => {
         const searchText = displayKey ? option[displayKey] : String(option);
         return searchText.toLowerCase().includes(inputValue.toLowerCase());
       });
     }
-    
+
     setFilteredOptions(filtered);
     setHighlightedIndex(-1);
   }, [inputValue, options, displayKey, filterFunction]);
@@ -70,7 +72,7 @@ export default function AutoComplete({
     setInputValue(newValue);
     setShowDropdown(true);
     setHighlightedIndex(-1);
-    
+
     if (onChange) {
       onChange(newValue);
     }
@@ -80,11 +82,11 @@ export default function AutoComplete({
   const handleOptionSelect = (option) => {
     const optionValue = valueKey ? option[valueKey] : option;
     const displayValue = displayKey ? option[displayKey] : option;
-    
+
     setInputValue(String(displayValue));
     setShowDropdown(false);
     setHighlightedIndex(-1);
-    
+
     if (onSelect) {
       onSelect(optionValue, option);
     }
@@ -96,7 +98,7 @@ export default function AutoComplete({
   // Handle keyboard navigation
   const handleKeyDown = (e) => {
     if (!showDropdown) {
-      if (e.key === 'ArrowDown') {
+      if (e.key === "ArrowDown") {
         setShowDropdown(true);
         return;
       }
@@ -104,30 +106,30 @@ export default function AutoComplete({
     }
 
     switch (e.key) {
-      case 'ArrowDown':
+      case "ArrowDown":
         e.preventDefault();
-        setHighlightedIndex(prev => 
-          prev < filteredOptions.length - 1 ? prev + 1 : 0
+        setHighlightedIndex((prev) =>
+          prev < filteredOptions.length - 1 ? prev + 1 : 0,
         );
         break;
-      case 'ArrowUp':
+      case "ArrowUp":
         e.preventDefault();
-        setHighlightedIndex(prev => 
-          prev > 0 ? prev - 1 : filteredOptions.length - 1
+        setHighlightedIndex((prev) =>
+          prev > 0 ? prev - 1 : filteredOptions.length - 1,
         );
         break;
-      case 'Enter':
+      case "Enter":
         e.preventDefault();
         if (highlightedIndex >= 0 && filteredOptions[highlightedIndex]) {
           handleOptionSelect(filteredOptions[highlightedIndex]);
         }
         break;
-      case 'Escape':
+      case "Escape":
         setShowDropdown(false);
         setHighlightedIndex(-1);
         inputRef.current?.blur();
         break;
-      case 'Tab':
+      case "Tab":
         setShowDropdown(false);
         break;
     }
@@ -153,17 +155,17 @@ export default function AutoComplete({
   const handleClear = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    setInputValue('');
+    setInputValue("");
     setShowDropdown(false);
     setHighlightedIndex(-1);
-    
+
     if (onChange) {
-      onChange('');
+      onChange("");
     }
     if (onClear) {
       onClear();
     }
-    
+
     // Focus back to input
     inputRef.current?.focus();
   };
@@ -187,7 +189,7 @@ export default function AutoComplete({
           placeholder={placeholder}
           disabled={disabled}
           required={required}
-          className={`w-full px-4 py-3 ${icon ? 'pl-10' : ''} ${clearable && inputValue ? 'pr-16' : 'pr-10'} border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-airbnb-rausch focus:border-airbnb-rausch transition-airbnb bg-white disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
+          className={`w-full px-4 py-3 ${icon ? "pl-10" : ""} ${clearable && inputValue ? "pr-16" : "pr-10"} border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-airbnb-rausch focus:border-airbnb-rausch transition-airbnb bg-white disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
           autoComplete="off"
         />
         {/* Right side icons */}
@@ -199,15 +201,35 @@ export default function AutoComplete({
               className="p-1 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 transition-airbnb"
               tabIndex={-1}
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           )}
           {showDropdown && (
             <div className="text-gray-400">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
               </svg>
             </div>
           )}
@@ -220,21 +242,25 @@ export default function AutoComplete({
           className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-airbnb max-h-60 overflow-y-auto"
         >
           {filteredOptions.map((option, index) => {
-            const displayValue = displayKey ? option[displayKey] : String(option);
+            const displayValue = displayKey
+              ? option[displayKey]
+              : String(option);
             const isHighlighted = index === highlightedIndex;
-            
+
             return (
               <div
                 key={index}
                 className={`px-4 py-3 cursor-pointer transition-airbnb ${
-                  isHighlighted 
-                    ? 'bg-red-50 text-airbnb-rausch' 
-                    : 'hover:bg-gray-50'
+                  isHighlighted
+                    ? "bg-red-50 text-airbnb-rausch"
+                    : "hover:bg-gray-50"
                 }`}
                 onClick={() => handleOptionSelect(option)}
                 onMouseEnter={() => setHighlightedIndex(index)}
               >
-                {renderOption ? renderOption(option, isHighlighted) : displayValue}
+                {renderOption
+                  ? renderOption(option, isHighlighted)
+                  : displayValue}
               </div>
             );
           })}
