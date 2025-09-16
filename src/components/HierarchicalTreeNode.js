@@ -12,6 +12,7 @@ function HierarchicalTreeNode({
   level = 0,
   isRoot = false,
   showSpouse = false,
+  onAssignAdmin,
 }) {
   // Get children of this member
   const children = useMemo(() => {
@@ -46,6 +47,7 @@ function HierarchicalTreeNode({
           spouse={spouse}
           allMembers={allMembers}
           className=""
+          onAssignAdmin={onAssignAdmin}
         />
       </div>
 
@@ -71,6 +73,7 @@ function HierarchicalTreeNode({
                 expandedNodes={expandedNodes}
                 onToggleExpand={onToggleExpand}
                 onOpenDetail={onOpenDetail}
+                onAssignAdmin={onAssignAdmin}
                 level={level + 1}
                 isRoot={false}
                 showSpouse={true} // Allow spouse to be shown when child is expanded
@@ -110,6 +113,7 @@ function HierarchicalTreeNode({
                       expandedNodes={expandedNodes}
                       onToggleExpand={onToggleExpand}
                       onOpenDetail={onOpenDetail}
+                      onAssignAdmin={onAssignAdmin}
                       level={level + 1}
                       isRoot={false}
                       showSpouse={false}

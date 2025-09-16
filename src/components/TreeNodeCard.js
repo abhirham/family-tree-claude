@@ -22,6 +22,7 @@ function TreeNodeCard({
   spouse = null,
   allMembers = [],
   className = "",
+  onAssignAdmin = null,
 }) {
   const { canAssignAdmin } = usePermissions();
 
@@ -132,6 +133,21 @@ function TreeNodeCard({
               <div className="text-xs text-gray-500">Children</div>
             </div>
           </div>
+
+          {/* Assign Admin Button */}
+          {canAssignAdmin() && onAssignAdmin && (
+            <div className="mt-3 pt-3 border-t border-gray-100">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onAssignAdmin(member);
+                }}
+                className="w-full text-xs px-3 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg transition-airbnb font-medium"
+              >
+                Assign Admin
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Expand/Collapse Button */}
@@ -199,6 +215,21 @@ function TreeNodeCard({
                   <div className="text-xs text-gray-500">Children</div>
                 </div>
               </div>
+
+              {/* Assign Admin Button for Spouse */}
+              {canAssignAdmin() && onAssignAdmin && (
+                <div className="mt-3 pt-3 border-t border-gray-100">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onAssignAdmin(spouse);
+                    }}
+                    className="w-full text-xs px-3 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg transition-airbnb font-medium"
+                  >
+                    Assign Admin
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </>

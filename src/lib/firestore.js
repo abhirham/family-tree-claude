@@ -4,6 +4,7 @@ import {
   getDocs,
   getDoc,
   addDoc,
+  setDoc,
   updateDoc,
   deleteDoc,
   query,
@@ -15,7 +16,7 @@ import {
   signInWithEmailAndPassword,
   signOut,
 } from "firebase/auth";
-import { db, auth } from "./firebase";
+import { db, auth, secondaryAuth } from "./firebase";
 import { deleteImage, deleteImages } from "./imageUpload";
 
 const COLLECTION_NAME = "familyMembers";
@@ -581,12 +582,28 @@ export async function getAllUsers() {
 // Get a specific user profile
 export async function getUserProfile(uid) {
   try {
+    // First try to get by document ID (UID)
     const docRef = doc(db, USERS_COLLECTION_NAME, uid);
     const docSnap = await getDoc(docRef);
 
     if (docSnap.exists()) {
       return { id: docSnap.id, ...docSnap.data() };
     } else {
+      // Fallback: search by UID field if document ID doesn't match
+      console.log("Document not found by ID, searching by UID field...");
+      const q = query(
+        collection(db, USERS_COLLECTION_NAME),
+        where("uid", "==", uid)
+      );
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        const userDoc = querySnapshot.docs[0];
+        console.log("Found user by UID field:", userDoc.id);
+        return { id: userDoc.id, ...userDoc.data() };
+      }
+
+      console.log("User profile not found for UID:", uid);
       return null;
     }
   } catch (error) {
@@ -712,6 +729,9 @@ export async function createBranchFromMember(memberId, adminData) {
     throw new Error("Authentication required to create branches");
   }
 
+  // Save the original user's email for potential re-authentication
+  const originalUserEmail = auth.currentUser.email;
+
   try {
     const member = await getFamilyMember(memberId);
     if (!member) {
@@ -720,31 +740,53 @@ export async function createBranchFromMember(memberId, adminData) {
 
     const branchName = `${member.name} Branch`;
     let adminUid;
+    let userWasSwitched = false;
 
     // Handle admin creation or assignment
     if (adminData.isExisting) {
       // Assign existing admin
       adminUid = adminData.uid;
     } else {
-      // Create new admin
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        adminData.email,
-        adminData.tempPassword,
-      );
-      adminUid = userCredential.user.uid;
+      // PERFECT SOLUTION: Use secondary auth instance to create user without affecting current session
+      console.log("Creating new admin using secondary auth instance...");
 
-      // Create user profile
-      await createUserProfile({
-        uid: adminUid,
-        email: adminData.email,
-        role: "branch_admin",
-        branchIds: [], // Will be updated after branch creation
-        mustChangePassword: true,
-      });
+      try {
+        // Create new admin using secondary auth (won't affect current user session)
+        const userCredential = await createUserWithEmailAndPassword(
+          secondaryAuth,
+          adminData.email,
+          adminData.tempPassword,
+        );
+        adminUid = userCredential.user.uid;
+
+        // Create user profile for the new admin with UID as document ID
+        const userProfile = {
+          uid: adminUid,
+          email: adminData.email,
+          role: "branch_admin",
+          branchIds: [], // Will be updated after branch creation
+          mustChangePassword: true,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          createdBy: auth.currentUser.uid, // Current user remains signed in
+        };
+
+        // Use setDoc with the UID as document ID instead of addDoc with auto-generated ID
+        const userDocRef = doc(db, USERS_COLLECTION_NAME, adminUid);
+        await setDoc(userDocRef, userProfile);
+
+        // Sign out from secondary auth to clean up
+        await signOut(secondaryAuth);
+
+        console.log(`Admin ${adminData.email} created successfully! Original user session preserved.`);
+
+      } catch (error) {
+        console.error("Error creating admin with secondary auth:", error);
+        throw error;
+      }
     }
 
-    // Create branch
+    // Create branch (only reached if using existing admin)
     const branchId = await createBranch({
       name: branchName,
       rootMemberId: memberId,

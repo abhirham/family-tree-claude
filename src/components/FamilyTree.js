@@ -421,6 +421,7 @@ const FamilyTree = forwardRef(
               onNavigateToMember={onNavigateToMember}
               selectedPerson={selectedPerson}
               setSelectedPerson={setSelectedPerson}
+              onAssignAdmin={onAssignAdmin}
             />
           </div>
         </div>
