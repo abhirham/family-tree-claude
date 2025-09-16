@@ -8,7 +8,6 @@ import AutoComplete from "./AutoComplete";
 import FamilyTreeCanvas from "./FamilyTreeCanvas";
 import UserDetailModal from "./UserDetailModal";
 
-
 const FamilyTree = forwardRef(
   (
     {
@@ -22,7 +21,7 @@ const FamilyTree = forwardRef(
       onNavigateToMember,
       onAssignAdmin,
     },
-    ref
+    ref,
   ) => {
     const [members, setMembers] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -39,7 +38,7 @@ const FamilyTree = forwardRef(
         if (!searchTerm.trim()) return;
 
         const foundMember = members.find((member) =>
-          member.name.toLowerCase().includes(searchTerm.toLowerCase())
+          member.name.toLowerCase().includes(searchTerm.toLowerCase()),
         );
 
         if (foundMember) {
@@ -61,10 +60,10 @@ const FamilyTree = forwardRef(
         if (!searchTermA.trim() || !searchTermB.trim()) return;
 
         const memberA = members.find((member) =>
-          member.name.toLowerCase().includes(searchTermA.toLowerCase())
+          member.name.toLowerCase().includes(searchTermA.toLowerCase()),
         );
         const memberB = members.find((member) =>
-          member.name.toLowerCase().includes(searchTermB.toLowerCase())
+          member.name.toLowerCase().includes(searchTermB.toLowerCase()),
         );
 
         if (!memberA || !memberB) {
@@ -94,14 +93,14 @@ const FamilyTree = forwardRef(
 
           // Show root members initially (members with root=true)
           const rootMembers = familyMembers.filter(
-            (member) => member.root === true
+            (member) => member.root === true,
           );
 
           console.log("Debug: All family members:", familyMembers);
           console.log("Debug: Root members:", rootMembers);
           console.log(
             "Debug: Setting displayed members to:",
-            rootMembers.length
+            rootMembers.length,
           );
 
           setDisplayedMembers(rootMembers);
@@ -126,7 +125,7 @@ const FamilyTree = forwardRef(
         // Find real parents (exclude dummy parent IDs)
         person.parentIds.forEach((parentId) => {
           // Skip dummy parent IDs - they don't represent real people
-          if (!parentId.startsWith('dummy_parent_')) {
+          if (!parentId.startsWith("dummy_parent_")) {
             const parent = members.find((m) => m.id === parentId);
             if (parent) {
               related.add(parent.id);
@@ -134,13 +133,13 @@ const FamilyTree = forwardRef(
             }
           }
         });
-        
+
         // Add siblings (others with same parents, including dummy parent IDs)
         const siblings = members.filter(
           (member) =>
-            member.id !== person.id && 
-            member.parentIds && 
-            member.parentIds.some(pid => person.parentIds.includes(pid))
+            member.id !== person.id &&
+            member.parentIds &&
+            member.parentIds.some((pid) => person.parentIds.includes(pid)),
         );
 
         siblings.forEach((sibling) => {
@@ -151,13 +150,12 @@ const FamilyTree = forwardRef(
 
       // Find children (people who have this person in their parentIds)
       const children = members.filter(
-        (member) => member.parentIds && member.parentIds.includes(person.id)
+        (member) => member.parentIds && member.parentIds.includes(person.id),
       );
       children.forEach((child) => {
         related.add(child.id);
         relatedWithTypes.push({ member: child, type: "Child" });
       });
-
 
       // Add spouse
       if (person.spouseId) {
@@ -168,7 +166,8 @@ const FamilyTree = forwardRef(
 
           // Also include spouse's children as step-children if they're not already included
           const spouseChildren = members.filter(
-            (member) => member.parentIds && member.parentIds.includes(spouse.id)
+            (member) =>
+              member.parentIds && member.parentIds.includes(spouse.id),
           );
           spouseChildren.forEach((child) => {
             if (!related.has(child.id) && child.id !== person.id) {
@@ -181,7 +180,7 @@ const FamilyTree = forwardRef(
 
       // Also find if this person is someone else's spouse
       const spouseOfMember = members.find(
-        (member) => member.spouseId === person.id
+        (member) => member.spouseId === person.id,
       );
       if (spouseOfMember && !related.has(spouseOfMember.id)) {
         related.add(spouseOfMember.id);
@@ -189,7 +188,8 @@ const FamilyTree = forwardRef(
 
         // Include spouse's children as step-children if they're not already included
         const spouseOfChildren = members.filter(
-          (member) => member.parentIds && member.parentIds.includes(spouseOfMember.id)
+          (member) =>
+            member.parentIds && member.parentIds.includes(spouseOfMember.id),
         );
         spouseOfChildren.forEach((child) => {
           if (!related.has(child.id) && child.id !== person.id) {
@@ -288,7 +288,7 @@ const FamilyTree = forwardRef(
 
       // Priority 1: Children (people who have this person in their parentIds)
       const children = members.filter(
-        (member) => member.parentIds && member.parentIds.includes(person.id)
+        (member) => member.parentIds && member.parentIds.includes(person.id),
       );
       children.forEach((child) => {
         connections.push(child.id);
@@ -299,9 +299,9 @@ const FamilyTree = forwardRef(
         // Find siblings with same parents
         const siblings = members.filter(
           (member) =>
-            member.id !== person.id && 
-            member.parentIds && 
-            member.parentIds.some(pid => person.parentIds.includes(pid))
+            member.id !== person.id &&
+            member.parentIds &&
+            member.parentIds.some((pid) => person.parentIds.includes(pid)),
         );
         siblings.forEach((sibling) => {
           connections.push(sibling.id);
@@ -312,7 +312,10 @@ const FamilyTree = forwardRef(
       if (person.parentIds && person.parentIds.length > 0) {
         person.parentIds.forEach((parentId) => {
           // Skip dummy parent IDs - they don't represent real people
-          if (!parentId.startsWith('dummy_parent_') && !connections.includes(parentId)) {
+          if (
+            !parentId.startsWith("dummy_parent_") &&
+            !connections.includes(parentId)
+          ) {
             connections.push(parentId);
           }
         });
@@ -329,7 +332,8 @@ const FamilyTree = forwardRef(
       // Priority 5: Step-children (spouse's children that aren't already included)
       if (person.spouseId) {
         const spouseChildren = members.filter(
-          (member) => member.parentIds && member.parentIds.includes(person.spouseId)
+          (member) =>
+            member.parentIds && member.parentIds.includes(person.spouseId),
         );
         spouseChildren.forEach((stepChild) => {
           if (!connections.includes(stepChild.id)) {
@@ -340,7 +344,7 @@ const FamilyTree = forwardRef(
 
       // Priority 6: Find if this person is someone else's spouse (bidirectional spouse)
       const spouseOfMember = members.find(
-        (member) => member.spouseId === person.id
+        (member) => member.spouseId === person.id,
       );
       if (spouseOfMember && !connections.includes(spouseOfMember.id)) {
         connections.push(spouseOfMember.id);
@@ -431,7 +435,7 @@ const FamilyTree = forwardRef(
         />
       </div>
     );
-  }
+  },
 );
 
 FamilyTree.displayName = "FamilyTree";

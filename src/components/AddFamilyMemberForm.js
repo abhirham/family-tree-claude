@@ -65,7 +65,7 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
       (!formData.linkedMemberId || !formData.relationshipType)
     ) {
       setError(
-        "Link to Existing Family Member and Relationship Type are required for all users except the first one."
+        "Link to Existing Family Member and Relationship Type are required for all users except the first one.",
       );
       setIsLoading(false);
       return;
@@ -74,11 +74,11 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
     // Validate child relationship requires spouse
     if (formData.relationshipType === "child" && formData.linkedMemberId) {
       const selectedMember = existingMembers.find(
-        (m) => m.id === formData.linkedMemberId
+        (m) => m.id === formData.linkedMemberId,
       );
       if (!selectedMember?.spouseId) {
         setError(
-          "Cannot add a child to a user without a spouse. Please add a spouse first."
+          "Cannot add a child to a user without a spouse. Please add a spouse first.",
         );
         setIsLoading(false);
         return;
@@ -100,7 +100,7 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
     // Validate sibling relationship - only allow for root users
     if (formData.relationshipType === "sibling" && formData.linkedMemberId) {
       const selectedMember = existingMembers.find(
-        (m) => m.id === formData.linkedMemberId
+        (m) => m.id === formData.linkedMemberId,
       );
       const isRootUser = selectedMember && selectedMember.root === true;
 
@@ -108,7 +108,7 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
         const parents =
           selectedMember.parentIds && selectedMember.parentIds.length > 0
             ? existingMembers.filter((member) =>
-                selectedMember.parentIds.includes(member.id)
+                selectedMember.parentIds.includes(member.id),
               )
             : [];
 
@@ -120,7 +120,7 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
                 }, select their parent${
                   parents.length > 1 ? "s" : ""
                 } instead: ${parents.map((p) => p.name).join(" or ")}.`
-              : `Please select a root family member or add as child to a parent.`)
+              : `Please select a root family member or add as child to a parent.`),
         );
         setIsLoading(false);
         return;
@@ -141,7 +141,7 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
         console.log("📸 Uploading profile image...");
         const profileResult = await uploadProfileImage(
           selectedProfileFile,
-          tempMemberId
+          tempMemberId,
         );
         profileImageUrl = profileResult.url;
         setUploadProgress((prev) => ({ ...prev, profile: 100 }));
@@ -154,14 +154,14 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
         console.log("📸 Uploading gallery images...");
         const galleryResults = await uploadGalleryImages(
           selectedGalleryFiles,
-          tempMemberId
+          tempMemberId,
         );
         galleryImageUrls = galleryResults;
         setUploadProgress((prev) => ({ ...prev, gallery: 100 }));
         console.log(
           "✅ Gallery images uploaded:",
           galleryResults.length,
-          "images"
+          "images",
         );
       }
 
@@ -188,7 +188,7 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
         memberData.relationshipType === "parent"
       ) {
         const linkedMember = existingMembers.find(
-          (m) => m.id === memberData.linkedMemberId
+          (m) => m.id === memberData.linkedMemberId,
         );
         if (linkedMember) {
           console.log("🧪 Testing parent-child relationship...");
@@ -779,8 +779,8 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
                         {member.gender === "male"
                           ? "♂"
                           : member.gender === "female"
-                          ? "♀"
-                          : "⚥"}
+                            ? "♀"
+                            : "⚥"}
                       </span>
                     )}
                   </div>
@@ -804,7 +804,7 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
 
                   if (formData.linkedMemberId) {
                     const selectedMember = existingMembers.find(
-                      (m) => m.id === formData.linkedMemberId
+                      (m) => m.id === formData.linkedMemberId,
                     );
                     const hasSpouse = selectedMember?.spouseId;
                     const isRootUser =
@@ -863,8 +863,8 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
                       !option.enabled
                         ? "text-gray-400 cursor-not-allowed"
                         : isHighlighted
-                        ? "text-blue-700"
-                        : "text-gray-900"
+                          ? "text-blue-700"
+                          : "text-gray-900"
                     }`}
                   >
                     <span>{option.label}</span>
@@ -887,7 +887,7 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
                 )}
                 filterFunction={(options, input) => {
                   return options.filter((option) =>
-                    option.label.toLowerCase().includes(input.toLowerCase())
+                    option.label.toLowerCase().includes(input.toLowerCase()),
                   );
                 }}
               />
@@ -920,13 +920,13 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
                 formData.linkedMemberId &&
                 (() => {
                   const selectedMember = existingMembers.find(
-                    (m) => m.id === formData.linkedMemberId
+                    (m) => m.id === formData.linkedMemberId,
                   );
                   const existingParents =
                     selectedMember.parentIds &&
                     selectedMember.parentIds.length > 0
                       ? existingMembers.filter((member) =>
-                          selectedMember.parentIds.includes(member.id)
+                          selectedMember.parentIds.includes(member.id),
                         )
                       : [];
 
@@ -964,7 +964,7 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
                 formData.linkedMemberId &&
                 (() => {
                   const selectedMember = existingMembers.find(
-                    (m) => m.id === formData.linkedMemberId
+                    (m) => m.id === formData.linkedMemberId,
                   );
                   const hasSpouse = selectedMember?.spouseId;
                   if (!hasSpouse) {
@@ -998,7 +998,7 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
               {formData.linkedMemberId &&
                 (() => {
                   const selectedMember = existingMembers.find(
-                    (m) => m.id === formData.linkedMemberId
+                    (m) => m.id === formData.linkedMemberId,
                   );
                   const isRootUser =
                     selectedMember && selectedMember.root === true;
@@ -1011,7 +1011,7 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
                         ? existingMembers.filter(
                             (member) =>
                               selectedMember.parentIds.includes(member.id) &&
-                              !member.id.startsWith("dummy_parent_")
+                              !member.id.startsWith("dummy_parent_"),
                           )
                         : [];
 
@@ -1081,8 +1081,8 @@ export default function AddFamilyMemberForm({ onMemberAdded }) {
                 {uploadProgress.profile > 0 && uploadProgress.profile < 100
                   ? "Uploading profile image..."
                   : uploadProgress.gallery > 0 && uploadProgress.gallery < 100
-                  ? "Uploading gallery images..."
-                  : "Adding member..."}
+                    ? "Uploading gallery images..."
+                    : "Adding member..."}
               </span>
             </>
           ) : (

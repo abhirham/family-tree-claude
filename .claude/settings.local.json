@@ -29,7 +29,8 @@
       "Bash(dir:*)",
       "mcp__playwright__browser_file_upload",
       "Bash(mkdir:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(npx prettier:*)"
     ],
     "deny": [],
     "ask": []

@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import PersonCard from './PersonCard';
+import PersonCard from "./PersonCard";
 
 function RelationshipSection({ title, members, onMemberClick, currentPerson }) {
   if (!members || members.length === 0) return null;
@@ -14,7 +14,7 @@ function RelationshipSection({ title, members, onMemberClick, currentPerson }) {
           {members.length}
         </span>
       </div>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {members.map((memberData) => (
           <PersonCard

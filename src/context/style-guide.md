@@ -5,7 +5,6 @@
 ### Primary Brand Colors
 
 - **Airbnb Rausch**: `#FF385C` (`text-airbnb-rausch`, `bg-airbnb-rausch`)
-
   - Primary action color, selection states, hover states
   - Used for: buttons, links, selected states, primary accents
 

@@ -124,7 +124,7 @@ export default function Home() {
             {/* Title */}
             <div className="flex items-center min-w-0 flex-1">
               <h1 className="text-2xl font-semibold text-gray-900 truncate">
-                Your Family's Story23
+                Your Family's Story
               </h1>
               {user && (
                 <span className="ml-4 text-sm text-gray-500 hidden sm:inline">

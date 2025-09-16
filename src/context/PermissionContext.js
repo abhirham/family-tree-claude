@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { createContext, useContext, useEffect, useState } from 'react';
-import { useAuth } from './AuthContext';
-import { getUserPermissions } from '@/lib/firestore';
+import { createContext, useContext, useEffect, useState } from "react";
+import { useAuth } from "./AuthContext";
+import { getUserPermissions } from "@/lib/firestore";
 
 const PermissionContext = createContext({});
 
@@ -13,17 +13,17 @@ export function usePermissions() {
 export function PermissionProvider({ children }) {
   const { user, loading: authLoading } = useAuth();
   const [permissions, setPermissions] = useState({
-    role: 'public',
+    role: "public",
     branches: [],
     canEditAll: false,
-    mustChangePassword: false
+    mustChangePassword: false,
   });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchPermissions = async () => {
       if (authLoading) return;
-      
+
       setLoading(true);
       try {
         if (user) {
@@ -31,19 +31,19 @@ export function PermissionProvider({ children }) {
           setPermissions(userPermissions);
         } else {
           setPermissions({
-            role: 'public',
+            role: "public",
             branches: [],
             canEditAll: false,
-            mustChangePassword: false
+            mustChangePassword: false,
           });
         }
       } catch (error) {
-        console.error('Error fetching user permissions:', error);
+        console.error("Error fetching user permissions:", error);
         setPermissions({
-          role: 'public',
+          role: "public",
           branches: [],
           canEditAll: false,
-          mustChangePassword: false
+          mustChangePassword: false,
         });
       } finally {
         setLoading(false);
@@ -54,10 +54,10 @@ export function PermissionProvider({ children }) {
   }, [user, authLoading]);
 
   // Helper functions
-  const isSuperAdmin = () => permissions.role === 'super_admin';
-  const isBranchAdmin = () => permissions.role === 'branch_admin';
+  const isSuperAdmin = () => permissions.role === "super_admin";
+  const isBranchAdmin = () => permissions.role === "branch_admin";
   const isAuthenticated = () => !!user;
-  const isPublic = () => permissions.role === 'public';
+  const isPublic = () => permissions.role === "public";
 
   const canEditMember = (memberId) => {
     if (!user) return false;
@@ -80,7 +80,7 @@ export function PermissionProvider({ children }) {
         const userPermissions = await getUserPermissions(user.uid);
         setPermissions(userPermissions);
       } catch (error) {
-        console.error('Error refreshing permissions:', error);
+        console.error("Error refreshing permissions:", error);
       }
     }
   };
@@ -89,20 +89,20 @@ export function PermissionProvider({ children }) {
     permissions,
     loading,
     user,
-    
+
     // Role checks
     isSuperAdmin,
     isBranchAdmin,
     isAuthenticated,
     isPublic,
-    
+
     // Permission checks
     canEditMember,
     canAssignAdmin,
     canCreateMembers,
-    
+
     // Utility
-    refreshPermissions
+    refreshPermissions,
   };
 
   return (

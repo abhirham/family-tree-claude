@@ -1,70 +1,83 @@
-'use client';
+"use client";
 
-import Image from 'next/image';
-import { usePermissions } from '@/context/PermissionContext';
-import HumanAvatar from './HumanAvatar';
+import Image from "next/image";
+import { usePermissions } from "@/context/PermissionContext";
+import HumanAvatar from "./HumanAvatar";
 
 // Default landscape images inspired by the reference design
 const defaultImages = [
-  '/api/placeholder/400/240', // Mountain landscape
-  '/api/placeholder/400/241', // Forest scene
-  '/api/placeholder/400/242', // Lake view
-  '/api/placeholder/400/243', // Sunset mountains
-  '/api/placeholder/400/244', // Misty hills
+  "/api/placeholder/400/240", // Mountain landscape
+  "/api/placeholder/400/241", // Forest scene
+  "/api/placeholder/400/242", // Lake view
+  "/api/placeholder/400/243", // Sunset mountains
+  "/api/placeholder/400/244", // Misty hills
 ];
 
-function PersonCard({ member, onClick, isSelected = false, relationshipType = null, isHero = false, onAssignAdmin = null }) {
+function PersonCard({
+  member,
+  onClick,
+  isSelected = false,
+  relationshipType = null,
+  isHero = false,
+  onAssignAdmin = null,
+}) {
   const { canAssignAdmin } = usePermissions();
   const formatDate = (dateObj) => {
-    if (!dateObj) return '';
-    const date = dateObj.seconds ? new Date(dateObj.seconds * 1000) : new Date(dateObj);
-    return date.toLocaleDateString('en-US', { 
-      day: 'numeric',
-      month: 'short', 
-      year: 'numeric' 
+    if (!dateObj) return "";
+    const date = dateObj.seconds
+      ? new Date(dateObj.seconds * 1000)
+      : new Date(dateObj);
+    return date.toLocaleDateString("en-US", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
     });
   };
 
   const formatDateRange = (birthDate, deathDate) => {
     const birth = formatDate(birthDate);
     const death = formatDate(deathDate);
-    
+
     if (birth && death) {
       return `${birth} - ${death}`;
     } else if (birth) {
       return `${birth} - Present`;
     }
-    return '';
+    return "";
   };
 
   // Get a consistent seed for avatar generation based on member ID
   const getAvatarSeed = () => {
     if (!member.id) return 0;
-    return member.id.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
+    return member.id.split("").reduce((a, b) => a + b.charCodeAt(0), 0);
   };
 
   // Get a consistent default image based on member ID
   const getDefaultImage = () => {
     if (!member.id) return defaultImages[0];
-    const hash = member.id.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
+    const hash = member.id.split("").reduce((a, b) => a + b.charCodeAt(0), 0);
     return defaultImages[hash % defaultImages.length];
   };
 
   const getRelationshipBadge = () => {
     if (!relationshipType) return null;
-    
+
     const badgeColors = {
-      'Spouse': 'bg-pink-100 text-pink-800 border-pink-200',
-      'Child': 'bg-green-100 text-green-800 border-green-200',
-      'Parent': 'bg-blue-100 text-blue-800 border-blue-200',
-      'Sibling': 'bg-purple-100 text-purple-800 border-purple-200',
-      'Step-Child': 'bg-orange-100 text-orange-800 border-orange-200',
+      Spouse: "bg-pink-100 text-pink-800 border-pink-200",
+      Child: "bg-green-100 text-green-800 border-green-200",
+      Parent: "bg-blue-100 text-blue-800 border-blue-200",
+      Sibling: "bg-purple-100 text-purple-800 border-purple-200",
+      "Step-Child": "bg-orange-100 text-orange-800 border-orange-200",
     };
 
-    const colorClass = badgeColors[relationshipType] || 'bg-gray-100 text-gray-800 border-gray-200';
+    const colorClass =
+      badgeColors[relationshipType] ||
+      "bg-gray-100 text-gray-800 border-gray-200";
 
     return (
-      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${colorClass}`}>
+      <span
+        className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${colorClass}`}
+      >
         {relationshipType}
       </span>
     );
@@ -86,26 +99,34 @@ function PersonCard({ member, onClick, isSelected = false, relationshipType = nu
             </>
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
-              <HumanAvatar 
-                gender={member.gender || 'male'} 
-                size={120} 
-                seed={getAvatarSeed()} 
+              <HumanAvatar
+                gender={member.gender || "male"}
+                size={120}
+                seed={getAvatarSeed()}
               />
             </div>
           )}
-          <div className={`absolute bottom-6 left-6 ${member.imageUrl ? 'text-white' : 'text-gray-800'}`}>
+          <div
+            className={`absolute bottom-6 left-6 ${member.imageUrl ? "text-white" : "text-gray-800"}`}
+          >
             <h1 className="text-3xl font-semibold mb-2">{member.name}</h1>
             {formatDateRange(member.birthDate, member.deathDate) && (
-              <p className={`text-lg ${member.imageUrl ? 'opacity-90' : 'opacity-75'}`}>
+              <p
+                className={`text-lg ${member.imageUrl ? "opacity-90" : "opacity-75"}`}
+              >
                 {formatDateRange(member.birthDate, member.deathDate)}
               </p>
             )}
             {member.gender && (
-              <p className={`text-sm ${member.imageUrl ? 'opacity-75' : 'opacity-60'} capitalize mt-1`}>{member.gender}</p>
+              <p
+                className={`text-sm ${member.imageUrl ? "opacity-75" : "opacity-60"} capitalize mt-1`}
+              >
+                {member.gender}
+              </p>
             )}
           </div>
         </div>
-        
+
         {member.notes && (
           <div className="p-6">
             <p className="text-gray-700 leading-relaxed">{member.notes}</p>
@@ -122,8 +143,18 @@ function PersonCard({ member, onClick, isSelected = false, relationshipType = nu
               }}
               className="inline-flex items-center gap-2 px-4 py-2 bg-airbnb-babu text-white hover:bg-teal-600 rounded-lg font-medium transition-airbnb text-sm"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
+                />
               </svg>
               Assign Admin
             </button>
@@ -134,9 +165,9 @@ function PersonCard({ member, onClick, isSelected = false, relationshipType = nu
   }
 
   return (
-    <div 
+    <div
       className={`group relative bg-white shadow-airbnb hover:shadow-airbnb-hover transition-airbnb cursor-pointer overflow-hidden rounded-lg border border-gray-200 ${
-        isSelected ? 'ring-2 ring-airbnb-rausch ring-offset-2' : ''
+        isSelected ? "ring-2 ring-airbnb-rausch ring-offset-2" : ""
       }`}
       onClick={() => onClick(member)}
     >
@@ -161,10 +192,10 @@ function PersonCard({ member, onClick, isSelected = false, relationshipType = nu
           </>
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
-            <HumanAvatar 
-              gender={member.gender || 'male'} 
-              size={80} 
-              seed={getAvatarSeed()} 
+            <HumanAvatar
+              gender={member.gender || "male"}
+              size={80}
+              seed={getAvatarSeed()}
             />
           </div>
         )}
@@ -175,7 +206,7 @@ function PersonCard({ member, onClick, isSelected = false, relationshipType = nu
         <h3 className="font-semibold text-lg text-gray-800 mb-1 group-hover:text-airbnb-rausch transition-airbnb">
           {member.name}
         </h3>
-        
+
         {formatDateRange(member.birthDate, member.deathDate) && (
           <p className="text-sm text-gray-600 mb-2">
             {formatDateRange(member.birthDate, member.deathDate)}
@@ -183,7 +214,9 @@ function PersonCard({ member, onClick, isSelected = false, relationshipType = nu
         )}
 
         {member.gender && (
-          <p className="text-xs text-gray-500 capitalize mb-2">{member.gender}</p>
+          <p className="text-xs text-gray-500 capitalize mb-2">
+            {member.gender}
+          </p>
         )}
 
         {member.notes && (
@@ -194,11 +227,18 @@ function PersonCard({ member, onClick, isSelected = false, relationshipType = nu
 
         {/* Connection indicators */}
         <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100">
-          {member.parentIds && member.parentIds.filter(pid => !pid.startsWith('dummy_parent_')).length > 0 && (
-            <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
-              Has parent{member.parentIds.filter(pid => !pid.startsWith('dummy_parent_')).length !== 1 ? 's' : ''}
-            </span>
-          )}
+          {member.parentIds &&
+            member.parentIds.filter((pid) => !pid.startsWith("dummy_parent_"))
+              .length > 0 && (
+              <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
+                Has parent
+                {member.parentIds.filter(
+                  (pid) => !pid.startsWith("dummy_parent_"),
+                ).length !== 1
+                  ? "s"
+                  : ""}
+              </span>
+            )}
           {member.spouseId && (
             <span className="text-xs text-pink-600 bg-pink-50 px-2 py-1 rounded-full">
               Married
@@ -216,8 +256,18 @@ function PersonCard({ member, onClick, isSelected = false, relationshipType = nu
               }}
               className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 bg-airbnb-babu text-white hover:bg-teal-600 rounded-lg font-medium transition-airbnb text-xs"
             >
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+              <svg
+                className="w-3 h-3"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
+                />
               </svg>
               Assign Admin
             </button>
