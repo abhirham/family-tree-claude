@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import { useState, useRef, useEffect } from 'react';
-import FamilyTree from '@/components/FamilyTree';
-import AddFamilyMemberForm from '@/components/AddFamilyMemberForm';
-import LoginForm from '@/components/LoginForm';
-import AssignAdminModal from '@/components/AssignAdminModal';
-import FirstLoginPasswordChange from '@/components/FirstLoginPasswordChange';
-import Modal from '@/components/Modal';
-import { getAllFamilyMembers } from '@/lib/firestore';
-import { useAuth } from '@/context/AuthContext';
-import { usePermissions } from '@/context/PermissionContext';
+import { useState, useRef, useEffect } from "react";
+import FamilyTree from "@/components/FamilyTree";
+import AddFamilyMemberForm from "@/components/AddFamilyMemberForm";
+import LoginForm from "@/components/LoginForm";
+import AssignAdminModal from "@/components/AssignAdminModal";
+import FirstLoginPasswordChange from "@/components/FirstLoginPasswordChange";
+import Modal from "@/components/Modal";
+import { getAllFamilyMembers } from "@/lib/firestore";
+import { useAuth } from "@/context/AuthContext";
+import { usePermissions } from "@/context/PermissionContext";
 
 export default function Home() {
   const { user, loading, logout } = useAuth();
@@ -19,8 +19,8 @@ export default function Home() {
   const [showAssignAdmin, setShowAssignAdmin] = useState(false);
   const [selectedMemberForAdmin, setSelectedMemberForAdmin] = useState(null);
   const [refreshTree, setRefreshTree] = useState(0);
-  const [searchA, setSearchA] = useState('');
-  const [searchB, setSearchB] = useState('');
+  const [searchA, setSearchA] = useState("");
+  const [searchB, setSearchB] = useState("");
   const [familyMembers, setFamilyMembers] = useState([]);
   const familyTreeRef = useRef(null);
 
@@ -31,28 +31,28 @@ export default function Home() {
         const members = await getAllFamilyMembers();
         setFamilyMembers(members);
       } catch (error) {
-        console.error('Error fetching family members for search:', error);
+        console.error("Error fetching family members for search:", error);
       }
     };
-    
+
     fetchMembers();
   }, [refreshTree]); // Refresh when tree updates
 
   const handleMemberAdded = (memberData) => {
-    console.log('Debug: handleMemberAdded called with:', memberData);
-    console.log('Debug: Refreshing tree, current refreshTree:', refreshTree);
-    setRefreshTree(prev => {
-      console.log('Debug: Setting refreshTree from', prev, 'to', prev + 1);
+    console.log("Debug: handleMemberAdded called with:", memberData);
+    console.log("Debug: Refreshing tree, current refreshTree:", refreshTree);
+    setRefreshTree((prev) => {
+      console.log("Debug: Setting refreshTree from", prev, "to", prev + 1);
       return prev + 1;
     });
     setShowAddForm(false);
-    console.log('Debug: Form closed, tree should refresh');
+    console.log("Debug: Form closed, tree should refresh");
   };
 
   const handleSearchA = (searchValue = searchA) => {
     if (familyTreeRef.current && familyTreeRef.current.handleSearchA) {
       // If searchValue is an ID (from autocomplete), find the member name
-      const member = familyMembers.find(m => m.id === searchValue);
+      const member = familyMembers.find((m) => m.id === searchValue);
       const searchTerm = member ? member.name : searchValue;
       familyTreeRef.current.handleSearchA(searchTerm);
     }
@@ -67,8 +67,8 @@ export default function Home() {
   const handleSearchPath = (searchValueA = searchA, searchValueB = searchB) => {
     if (familyTreeRef.current && familyTreeRef.current.handleSearchPath) {
       // Convert IDs to names if needed
-      const memberA = familyMembers.find(m => m.id === searchValueA);
-      const memberB = familyMembers.find(m => m.id === searchValueB);
+      const memberA = familyMembers.find((m) => m.id === searchValueA);
+      const memberB = familyMembers.find((m) => m.id === searchValueB);
       const searchTermA = memberA ? memberA.name : searchValueA;
       const searchTermB = memberB ? memberB.name : searchValueB;
       familyTreeRef.current.handleSearchPath(searchTermA, searchTermB);
@@ -81,10 +81,10 @@ export default function Home() {
   };
 
   const handleAssignAdminSuccess = async (result) => {
-    console.log('Branch created successfully:', result);
+    console.log("Branch created successfully:", result);
     // Refresh permissions and tree data
     await refreshPermissions();
-    setRefreshTree(prev => prev + 1);
+    setRefreshTree((prev) => prev + 1);
     // Show success message
     // You could add a toast notification here
   };
@@ -93,7 +93,6 @@ export default function Home() {
     // Refresh permissions to remove mustChangePassword flag
     await refreshPermissions();
   };
-
 
   // Show loading spinner while checking auth state
   if (loading) {
@@ -125,7 +124,7 @@ export default function Home() {
             {/* Title */}
             <div className="flex items-center min-w-0 flex-1">
               <h1 className="text-2xl font-semibold text-gray-900 truncate">
-                Your Family's Story
+                Your Family's Story23
               </h1>
               {user && (
                 <span className="ml-4 text-sm text-gray-500 hidden sm:inline">
@@ -142,9 +141,9 @@ export default function Home() {
                   <button
                     onClick={() => setShowAddForm(!showAddForm)}
                     className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-airbnb whitespace-nowrap flex-shrink-0 ${
-                      showAddForm 
-                        ? 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300' 
-                        : 'bg-airbnb-rausch text-white hover:bg-red-600 shadow-airbnb hover:shadow-airbnb-hover'
+                      showAddForm
+                        ? "bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300"
+                        : "bg-airbnb-rausch text-white hover:bg-red-600 shadow-airbnb hover:shadow-airbnb-hover"
                     }`}
                   >
                     {showAddForm ? (
@@ -165,8 +164,18 @@ export default function Home() {
                     className="inline-flex items-center gap-2 px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-airbnb text-sm"
                     title="Sign Out"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                      />
                     </svg>
                     <span className="hidden sm:inline">Sign Out</span>
                   </button>
@@ -178,8 +187,18 @@ export default function Home() {
                     onClick={() => setShowLoginForm(true)}
                     className="inline-flex items-center gap-2 px-4 py-2 bg-airbnb-rausch text-white hover:bg-red-600 rounded-lg font-medium transition-airbnb whitespace-nowrap flex-shrink-0 shadow-airbnb hover:shadow-airbnb-hover"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
+                      />
                     </svg>
                     <span>Sign In</span>
                   </button>
@@ -192,8 +211,8 @@ export default function Home() {
 
       {/* Main Content */}
       <main>
-        <FamilyTree 
-          key={refreshTree} 
+        <FamilyTree
+          key={refreshTree}
           ref={familyTreeRef}
           familyMembers={familyMembers}
           searchA={searchA}
@@ -209,14 +228,15 @@ export default function Home() {
 
       {/* Add Family Member Modal - Only accessible when authenticated */}
       {user && (
-        <Modal 
+        <Modal
           isOpen={showAddForm}
           onClose={() => setShowAddForm(false)}
           title="Introduce Someone New"
         >
           <div className="bg-gray-50 rounded-lg p-4 mb-6 border border-gray-200">
             <p className="text-gray-700 text-sm">
-              Every family story starts with someone special. Who would you like to introduce to your family's story?
+              Every family story starts with someone special. Who would you like
+              to introduce to your family's story?
             </p>
           </div>
           <AddFamilyMemberForm onMemberAdded={handleMemberAdded} />
@@ -224,19 +244,19 @@ export default function Home() {
       )}
 
       {/* Login Modal */}
-      <Modal 
+      <Modal
         isOpen={showLoginForm}
         onClose={() => setShowLoginForm(false)}
         title=""
         showCloseButton={true}
       >
-        <LoginForm 
+        <LoginForm
           onSuccess={() => {
             setShowLoginForm(false);
-            console.log('Login successful');
+            console.log("Login successful");
           }}
           onError={(error) => {
-            console.error('Login error:', error);
+            console.error("Login error:", error);
           }}
         />
       </Modal>
