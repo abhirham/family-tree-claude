@@ -32,7 +32,7 @@ A modern family tree application built with Next.js 15, React 19, and Firebase F
 - Advanced autocomplete with keyboard navigation
 - Custom option rendering, filtering
 - Clearable input with visual feedback
-- Used for family member search and selection
+- Used for family member search and selection.
 
 ## Data Model
 
